@@ -2,11 +2,17 @@ import sqlite3
 
 
 class Database():
-    """Class used for communicating with the DB"""
+    """
+    Class used for communicating with the DB
+    Tables: received_nuggets, available_nuggets
+    Columns: username | nuggets
+    """
 
-    def give(self, table, username, amount):
-        self.c.execute(
-            f'INSERT INTO {table} VALUES("{username}", {amount});')
+    def set(self, table, username, amount):
+        self.c.execute(f"""
+            INSERT OR REPLACE INTO {table}
+            VALUES("{username}", {amount});
+        """)
         self.conn.commit()
 
     def get(self, table, username) -> int:
