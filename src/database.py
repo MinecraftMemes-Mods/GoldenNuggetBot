@@ -5,7 +5,7 @@ class Database():
     """
     Class used for communicating with the DB
     Tables: received_nuggets, available_nuggets
-    Columns: username | nuggets
+    Columns: username | amount
     """
 
     def set(self, table, username, amount):
