@@ -72,6 +72,6 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     """
 
     # user gifting to != post author
-    elif not comment.submission.author == args[1]:
+    elif comment.submission.author != args[1]:
         comment.reply("ERROR_MESSAGE")
         continue
