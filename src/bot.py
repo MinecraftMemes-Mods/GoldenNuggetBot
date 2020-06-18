@@ -42,7 +42,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # the weird thing below is regex.
     # it validates whether the command the user put in actually makes sense
     # you can see an explenation here: https://regex101.com/r/t6N7q2/1
-    if not re.match(r'(!(?:nug|nugget|gold)) ((?:\d+|(?:max|full|all)))', comment.body):
+    if not re.match(r'(!(?:nug|nugget|gold)) ((?:\d|(?:max|full|all)))', comment.body):
         continue
 
     # splitting the comment into single words
@@ -56,7 +56,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         continue
 
     # invalid gift arg
-    elif not int_conv(amount_given) or not amount_given in ("max", "full", "all"):
+    elif not int_conv(amount_given) or amount_given < 0 or not amount_given in ("max", "full", "all"):
         comment.reply("ERROR_MESSAGE")
         continue
            
