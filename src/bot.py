@@ -59,6 +59,10 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     elif not int_conv(amount_given) or amount_given < 0 or not amount_given in ("max", "full", "all"):
         comment.reply("ERROR_MESSAGE")
         continue
+       
+    elif comment.author == comment.submission.author:
+        comment.reply("ERROR_MESSAGE")
+        continue
            
     """
     what needs to be done with the database:
