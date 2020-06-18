@@ -63,6 +63,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     elif not int_conv(args[2]) or not args[2] in ("max", "full", "all"):
         comment.reply("ERROR_MESSAGE")
         continue
+       
+    # user gifting to != post author
+    elif comment.submission.author != args[1]:
+        comment.reply("ERROR_MESSAGE")
+        continue
     
     """
     what needs to be done with the database:
@@ -70,8 +75,3 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         comment.reply("ERROR MESSAGE")
         continue
     """
-
-    # user gifting to != post author
-    elif comment.submission.author != args[1]:
-        comment.reply("ERROR_MESSAGE")
-        continue
