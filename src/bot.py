@@ -42,7 +42,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # the weird thing below is regex.
     # it validates whether the command the user put in actually makes sense
     # you can see an explenation here: https://regex101.com/r/t6N7q2/1
-    if not re.match(r'(!(?:nug|nugget|gold)) ((?:\d|(?:max|full|all)))', comment.body):
+    try:
+        # checks reply is on one of the bot's stickies
+        if not re.match(r'(!(?:nug|nugget|gold))', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
+            continue
+    except AttributeError: # raised if there is no parent comment
         continue
 
     # splitting the comment into single words
