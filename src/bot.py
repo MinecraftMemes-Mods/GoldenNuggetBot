@@ -65,7 +65,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         continue
        
     # checks commenter doesn't have empty balance
-    elif db.get(comment.author) != None and db.get(comment.author)["available"] < amount_given:
+    elif db.get(comment.author.name) != None and db.get(comment.author.name)["available"] < amount_given:
         comment.reply("ERROR MESSAGE")
         continue
 
