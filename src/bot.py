@@ -53,7 +53,25 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     if args[1].startswith('u/'):
         args[1] = args[1][2:]
 
-    if int_conv(args[2]):
-        pass
-    elif args[2] in ('max', 'full', 'all'):
-        pass
+    # exception handling
+    # author too young and doesn't meet karma requirements
+    if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and comment.author.link_karma + comment.author.comment_karma < 100:
+        comment.reply("ERROR_MESSAGE")
+        continue
+
+    # invalid gift arg
+    elif not int_conv(args[2]) or not args[2] in ("max", "full", "all"):
+        comment.reply("ERROR_MESSAGE")
+        continue
+    
+    """
+    what needs to be done with the database:
+    elif int(args[2]) > author.vote_nugs:
+        comment.reply("ERROR MESSAGE")
+        continue
+    """
+
+    # user gifting to != post author
+    elif not comment.submission.author == args[1]:
+        comment.reply("ERROR_MESSAGE")
+        continue
