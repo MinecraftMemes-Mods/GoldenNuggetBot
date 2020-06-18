@@ -64,13 +64,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         comment.reply("ERROR_MESSAGE")
         continue
        
-    elif comment.author == comment.submission.author:
-        comment.reply("ERROR_MESSAGE")
-        continue
-           
-    """
-    what needs to be done with the database:
-    elif int(args[2]) > author.vote_nugs:
+    # checks commenter doesn't have empty balance
+    elif db.get(comment.author) != None and db.get(comment.author)["available"] < amount_given:
         comment.reply("ERROR MESSAGE")
         continue
-    """
+
+    # creates database entry if required
+    if db.get(comment.author)["available"] == None:
+        db.set_available(comment.author, 5)
