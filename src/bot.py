@@ -71,4 +71,4 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
 
     # creates database entry if required
     if db.get(comment.author.name)["available"] == None:
-        db.set_available(comment.author, 5)
+        db.set_available(comment.author.name, 5)
