@@ -42,16 +42,12 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # the weird thing below is regex.
     # it validates whether the command the user put in actually makes sense
     # you can see an explenation here: https://regex101.com/r/t6N7q2/1
-    if not re.match(r'(!(?:nug|nugget|gold)) ((?:u/)?[\w-]{3,20}) ((?:\d+|(?:max|full|all)))', comment.body):
+    if not re.match(r'(!(?:nug|nugget|gold)) ((?:\d+|(?:max|full|all)))', comment.body):
         continue
 
     # splitting the comment into single words
-    # i. e. `!nug u/xeoth 20` will become ['u/xeoth', '20']
-    args = comment.body.split(' ')[1:]
-
-    # removing the u/ if present cause it's unnecessary
-    if args[1].startswith('u/'):
-        args[1] = args[1][2:]
+    # i. e. `!nug 20` will become ['!nug', '20']
+    amount_given = comment.body.split(' ')[1:]
 
     # exception handling
     # author too young and doesn't meet karma requirements
@@ -60,15 +56,10 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         continue
 
     # invalid gift arg
-    elif not int_conv(args[2]) or not args[2] in ("max", "full", "all"):
+    elif not int_conv(amount_given) or not amount_given in ("max", "full", "all"):
         comment.reply("ERROR_MESSAGE")
         continue
-       
-    # user gifting to != post author
-    elif comment.submission.author != args[1]:
-        comment.reply("ERROR_MESSAGE")
-        continue
-    
+           
     """
     what needs to be done with the database:
     elif int(args[2]) > author.vote_nugs:
