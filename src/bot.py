@@ -36,6 +36,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     i. e. `!nugget max` will transfer all nuggets to poster
     """
 
+    if db.check_comment(comment.id): # breaks completely when comments previously processed are reached
+        break
+
+    db.comment_add(comment.id)
+
     try:
         if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
             continue
@@ -104,33 +109,32 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
 
     """
     This section gives the OP an award nug for hitting a multiple of 5 received nuggets
-    
+
     Now, this might look weird, you might think "why isn't this just if op_received_nugs % 5 == 0, op_award_nugs += 1"
     Well, I (coder) thought about it some, and it turns out that doesn't really work. Let me elaborate
-    
+
     Since you can award multiple nuggets to the same poster, and since in theory someone could obtain more than 5 award
     nuggets (either via award nug resets or receivals), someone could in theory award an amount that causes OP to go past
-    a multiple of 5 but not stay on it, and potentially multiple times. 
-    
-    For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug, 
+    a multiple of 5 but not stay on it, and potentially multiple times.
+
+    For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug,
     but the former check wouldn't work. Or more extreme, OP has received 4, someone awards them 8. They would have received
     12 total, they should gain 2 award nugs (for 5 and 10 received nuggets), but again the check wouldn't work
-    
+
     This little bit of code accounts for that, by finding the difference needed for the next level, and then seeing how much
     it goes over and adds accordingly. It should work
     """
 
-    difFrom5 = 5 - op_received_nugs % 5
-    bonusNugs = 0
-    if (amount_given >= difFrom5):
-        amount_given -= difFrom5
-        # hopefully doesn't modify amount_given at all my python is rusty
-        bonusNugs += amount_given // 5 + 1
-        op_award_nugs += bonusNugs
-        amount_given += difFrom5
+    dif_from_5 = 5 - op_received_nugs % 5
+    bonus_nugs = 0
+    if (amount_given >= dif_from_5):
+        amount_given -= dif_from_5
+        bonus_nugs += amount_given // 5 + 1
+        op_award_nugs += bonus_nugs
+        amount_given += dif_from_5
 
     # increasing op's received nugs
-    op_received_nugs += amount_given
+    op_received_nugs += amount_given + bonus_nugs
 
     # updating db
     db.set_available(commenter, commenter_award_nugs)
@@ -141,10 +145,15 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
 
     # log comment
 
-    if (bonusNugs == 0):
+    if bonus_nugs:
         comment.reply("SUCCESS_MESSAGE")
     else:
         comment.reply("SUCCESS_MESSAGE")
 
-    for post in reddit.subreddit("xeothtest").new(limit=10):
-        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE'), sticky=True)
+for post in reddit.subreddit("xeothtest").new():
+    if db.check_post(post.id): # breaks completely when posts previously processed are reached
+        break
+
+    db.add_post(post.id)
+
+    comment.mod.distinguish(os.getenv('STICKIED_MESSAGE'), sticky=True)
