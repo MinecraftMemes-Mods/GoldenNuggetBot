@@ -89,3 +89,6 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     db.set_available(comment.author, db.get(comment.author)["available"] - amount_given)
     comment.reply("SUCCESS_MESSAGE")
 
+for post in reddit.subreddit("xeothtest").new():
+    comment.mod.distinguish("STICKIED_MESSAGE", sticky=True)
+
