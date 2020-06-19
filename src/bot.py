@@ -2,6 +2,7 @@ import praw
 import os
 import sqlite3
 import re
+import time
 from dotenv import load_dotenv
 from database import Database
 load_dotenv()
@@ -51,24 +52,43 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
 
     # splitting the comment into single words
     # i. e. `!nug 20` will become ['!nug', '20']
-    amount_given = comment.body.split(' ')[1:]
+    amount_given = comment.split()[1]
 
-    # exception handling
-    # author too young and doesn't meet karma requirements
+    # commenter too young and doesn't meet karma requirements
     if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and comment.author.link_karma + comment.author.comment_karma < 100:
         comment.reply("ERROR_MESSAGE")
         continue
 
-    # invalid gift arg
-    elif not int_conv(amount_given) or amount_given < 0 or not amount_given in ("max", "full", "all"):
+    # if author deletes their own post/account
+    elif not comment.submission.author:
         comment.reply("ERROR_MESSAGE")
         continue
-       
-    # checks commenter doesn't have empty balance
-    elif db.get(comment.author.name) != None and db.get(comment.author.name)["available"] < amount_given:
+
+    # trying to award self
+    elif comment.author == comment.submission.author:
+        comment.reply("ERROR_MESSAGE")
+        continue
+
+    # giving more than five nugs
+    elif amount_given > 5:
+        comment.reply("ERROR_MESSAGE")
+        continue
+
+    # commenter doesn't have enough nugs
+    elif db.get(comment.author)["available"] != None and db.get(comment.author)["available"] < amount_given:
         comment.reply("ERROR MESSAGE")
         continue
 
-    # creates database entry if required
-    if db.get(comment.author.name)["available"] == None:
-        db.set_available(comment.author.name, 5)
+    # gifter not in db yet
+    if db.get(comment.author)["available"] == None:
+        db.set_available(comment.author, 5)
+
+    # receiver not in db yet
+    if db.get(comment.submission.author)["received"] == None:
+        db.set_received(comment.author, 0)
+
+    # performs transactions
+    db.set_received(comment.submission.author, db.get(comment.submission.author)["received"] + amount_given)
+    db.set_available(comment.author, db.get(comment.author)["available"] - amount_given)
+    comment.reply("SUCCESS_MESSAGE")
+
