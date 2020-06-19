@@ -2,6 +2,7 @@ import praw
 import os
 import sqlite3
 import re
+import time
 from dotenv import load_dotenv
 from database import Database
 load_dotenv()
@@ -40,14 +41,10 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     """
     
 
-    # the weird thing below is regex.
-    # it validates whether the command the user put in actually makes sense
-    # you can see an explenation here: https://regex101.com/r/t6N7q2/1
     try:
-        # checks reply is on one of the bot's stickies
-        if not re.match(r'(!(?:nug|nugget|gold))', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
+        if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
             continue
-    except AttributeError: # raised if there is no parent comment
+    except AttributeError:  # raised if there is no parent comment
         continue
         
     #setting some helpful variables
@@ -86,10 +83,12 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     if not int_conv(amount_given) or amount_given <= 0:
         comment.reply("ERROR_MESSAGE")
         continue
+        
     # checks commenter has enough nuggets to award
     elif commenter_award_nugs < amount_given:
         comment.reply("ERROR MESSAGE")
         continue
+        
     # checks poster is not awarding themselves
     elif commenter == op:
         comment.reply("ERROR_MESSAGE")
@@ -98,7 +97,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # creates database entry for op if required
     if db.get(op) == None:
         db.set_available(op, 3)
-        db.received(op, 0)
+        db.set_received(op, 0)
         
     #setting some more helpful variables
     op_award_nugs = db.get(op)["available"]
@@ -124,8 +123,8 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     This little bit of code accounts for that, by finding the difference needed for the next level, and then seeing how much
     it goes over and adds accordingly. It should work
     """
+    
     difFrom5 = 5 - op_received_nugs % 5
-    bonusNugs = 0 #placeholder, since you can't just declare variables in python REEEEEEEEEEEEEEEEEEEEE (needed later)
     if (amount_given >= difFrom5):
         amount_given -= difFrom5
         bonusNugs += amount_given // 5 + 1 #hopefully doesn't modify amount_given at all my python is rusty
@@ -141,9 +140,13 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     db.set_received(op, op_award_nugs)
     
     #update nugflair
+    
     #log comment
     
     if (bonusNugs == 0):
         comment.reply("SUCCESS_MESSAGE")
-    else
+    else:
         comment.reply("SUCCESS_MESSAGE")
+
+    for post in reddit.subreddit("xeothtest").new(limit=10):
+        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE', sticky=True)
