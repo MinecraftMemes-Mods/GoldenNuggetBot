@@ -131,17 +131,21 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         amount_given -= dif_from_5
         bonus_nugs += amount_given // 5 + 1
         op_award_nugs += bonus_nugs
+    dif_from_5 = 5 - op_received_nugs % 5
+    bonus_nugs = 0
+    if (amount_given >= dif_from_5):
+        amount_given -= dif_from_5
+        bonus_nugs += amount_given // 5 + 1
+        op_award_nugs += bonus_nugs
         amount_given += dif_from_5
 
     # increasing op's received nugs
-    op_received_nugs += amount_given + bonus_nugs
+    op_received_nugs += amount_given
 
     # updating db
     db.set_available(commenter, commenter_award_nugs)
     db.set_received(op, op_received_nugs)
     db.set_received(op, op_award_nugs)
-
-    # update nugflair
 
     # log comment
 
@@ -149,6 +153,10 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         comment.reply("SUCCESS_MESSAGE")
     else:
         comment.reply("SUCCESS_MESSAGE")
+
+    # updates flair
+    reddit.subreddit("xeothtest").flair.set(commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
+    reddit.subreddit("xeothtest").flair.set(op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
 
 for post in reddit.subreddit("xeothtest").new():
     if db.check_post(post.id): # breaks completely when posts previously processed are reached
