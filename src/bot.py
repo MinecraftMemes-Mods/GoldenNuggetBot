@@ -95,5 +95,5 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         comment.author)["available"] - amount_given)
     comment.reply(os.getenv('SUCCESS'))
 
-    for post in reddit.subreddit("xeothtest").new():
+    for post in reddit.subreddit("xeothtest").new(limit=10):
         comment.mod.distinguish(os.getenv('STICKIED_MESSAGE', sticky=True)
