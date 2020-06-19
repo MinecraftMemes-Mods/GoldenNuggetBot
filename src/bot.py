@@ -28,7 +28,7 @@ reddit = praw.Reddit(
 db = database.Database()
 
 # listening for new comments
-for comment in reddit.subreddit('xeothtest').stream.comments():
+for comment in reddit.subreddit('xeothtest').stream.comments(skip_existing=True):
     """
     Possible ways of awarding are !nugget, !nug and !gold
     the first argument must be the username (should not matter whether preceded by u/ or not)
@@ -158,7 +158,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     reddit.subreddit("xeothtest").flair.set(commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
     reddit.subreddit("xeothtest").flair.set(op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
 
-for post in reddit.subreddit("xeothtest").new():
+for post in reddit.subreddit("xeothtest").stream.posts(skip_existing=True):
     if db.check_post(post.id): # breaks completely when posts previously processed are reached
         break
 
