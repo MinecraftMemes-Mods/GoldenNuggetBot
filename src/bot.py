@@ -27,10 +27,6 @@ reddit = praw.Reddit(
 
 db = database.Database()
 
-# database for logging already processed comments
-comment_db = sqlite3.connect('comments.db')
-comm_curs = comment_db.cursor()
-
 # listening for new comments
 for comment in reddit.subreddit('xeothtest').stream.comments():
     """
@@ -60,7 +56,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # creates database entry for commenter if required
     if db.get(commenter) == None:
         db.set_available(commenter, 3)
-        db.received(commenter, 0)
+        db.set_received(commenter, 0)
 
     # setting some more helpful variables
     commenter_award_nugs = db.get(commenter)["available"]
@@ -68,7 +64,6 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # splitting the comment into single words
     # i. e. `!nug 20` will become ['!nug', '20']
     # placeholder, since you can't just declare variables in python REEEEEEEEEEEEEEEEEEEEE
-    amount_given = 0
     try:
         amount_given = comment.body.split(' ')[1]
     except IndexError:  # because if someone just did !nug meaning 1 nugget
