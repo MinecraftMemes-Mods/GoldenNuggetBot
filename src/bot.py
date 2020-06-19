@@ -46,54 +46,110 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     except AttributeError:  # raised if there is no parent comment
         continue
 
+    # setting some helpful variables
+    commenter = comment.author.name  # person who is giving award
+    op = comment.submission.author.name  # person receiving award
+
+    # exception handling
+    # author too young and doesn't meet karma requirements
+    # (moved from other exception handling to make it so db entry isn't created if author is invalid)
+    if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
+        comment.reply("ERROR_MESSAGE")
+        continue
+
+    # creates database entry for commenter if required
+    if db.get(commenter) == None:
+        db.set_available(commenter, 3)
+        db.received(commenter, 0)
+
+    # setting some more helpful variables
+    commenter_award_nugs = db.get(commenter)["available"]
+
+    # splitting the comment into single words
+    # i. e. `!nug 20` will become ['!nug', '20']
+    # placeholder, since you can't just declare variables in python REEEEEEEEEEEEEEEEEEEEE
+    amount_given = 0
     try:
-        amount_given = comment.body.split()[1]
-    except IndexError:
+        amount_given = comment.body.split(' ')[1]
+    except IndexError:  # because if someone just did !nug meaning 1 nugget
         amount_given = 1
 
-    # commenter too young and doesn't meet karma requirements
-    if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and comment.author.link_karma + comment.author.comment_karma < 100:
-        comment.reply(os.getenv('ERROR_REQUIREMENTS'))
+    # converts valid text synonyms to their nugget amounts
+    if amount_given in ("max", "full", "all", "everything"):
+        amount_given = commenter_award_nugs
+
+    # more exception handling
+    # invalid gift arg
+    if not int_conv(amount_given) or amount_given <= 0:
+        comment.reply("ERROR_MESSAGE")
         continue
 
-    # if author deletes their own post/account
-    elif not comment.submission.author:
-        comment.reply(os.getenv('ERROR_ACC_DELETED'))
+    # checks commenter has enough nuggets to award
+    elif commenter_award_nugs < amount_given:
+        comment.reply("ERROR MESSAGE")
         continue
 
-    # trying to award self
-    elif comment.author == comment.submission.author:
-        comment.reply(os.getenv('ERROR_SELF_AWARD'))
+    # checks poster is not awarding themselves
+    elif commenter == op:
+        comment.reply("ERROR_MESSAGE")
         continue
 
-    # giving more than five nugs
-    elif amount_given > 5:
-        comment.reply(os.getenv('ERROR_TOO_MANY_NUGS'))
-        continue
+    # creates database entry for op if required
+    if db.get(op) == None:
+        db.set_available(op, 3)
+        db.set_received(op, 0)
 
-    # trying to give negative nugs
-    elif amount_given < 1:
-        comment.reply(os.getenv('ERROR_NEGATIVE_NUGS'))
+    # setting some more helpful variables
+    op_award_nugs = db.get(op)["available"]
+    op_received_nugs = db.get(op)["received"]
 
-    # commenter doesn't have enough nugs
-    elif db.get(comment.author.name)["available"] != None and db.get(comment.author)["available"] < amount_given:
-        comment.reply(os.getenv('ERROR_NOT_ENOUGH_NUGS'))
-        continue
+    # reducing commenter's award nugs by the number they give
+    # should moderators have infinite award nugs?
+    commenter_award_nugs -= amount_given
 
-    # gifter not in db yet
-    if db.get(comment.author.name)["available"] == None:
-        db.set_available(comment.author, 5)
+    """
+    This section gives the OP an award nug for hitting a multiple of 5 received nuggets
+    
+    Now, this might look weird, you might think "why isn't this just if op_received_nugs % 5 == 0, op_award_nugs += 1"
+    Well, I (coder) thought about it some, and it turns out that doesn't really work. Let me elaborate
+    
+    Since you can award multiple nuggets to the same poster, and since in theory someone could obtain more than 5 award
+    nuggets (either via award nug resets or receivals), someone could in theory award an amount that causes OP to go past
+    a multiple of 5 but not stay on it, and potentially multiple times. 
+    
+    For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug, 
+    but the former check wouldn't work. Or more extreme, OP has received 4, someone awards them 8. They would have received
+    12 total, they should gain 2 award nugs (for 5 and 10 received nuggets), but again the check wouldn't work
+    
+    This little bit of code accounts for that, by finding the difference needed for the next level, and then seeing how much
+    it goes over and adds accordingly. It should work
+    """
 
-    # receiver not in db yet
-    if db.get(comment.submission.author)["received"] == None:
-        db.set_received(comment.author, 0)
+    difFrom5 = 5 - op_received_nugs % 5
+    bonusNugs = 0
+    if (amount_given >= difFrom5):
+        amount_given -= difFrom5
+        # hopefully doesn't modify amount_given at all my python is rusty
+        bonusNugs += amount_given // 5 + 1
+        op_award_nugs += bonusNugs
+        amount_given += difFrom5
 
-    # performs transactions
-    db.set_received(comment.submission.author, db.get(
-        comment.submission.author)["received"] + amount_given)
-    db.set_available(comment.author, db.get(
-        comment.author)["available"] - amount_given)
-    comment.reply(os.getenv('SUCCESS'))
+    # increasing op's received nugs
+    op_received_nugs += amount_given
+
+    # updating db
+    db.set_available(commenter, commenter_award_nugs)
+    db.set_received(op, op_received_nugs)
+    db.set_received(op, op_award_nugs)
+
+    # update nugflair
+
+    # log comment
+
+    if (bonusNugs == 0):
+        comment.reply("SUCCESS_MESSAGE")
+    else:
+        comment.reply("SUCCESS_MESSAGE")
 
     for post in reddit.subreddit("xeothtest").new(limit=10):
-        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE', sticky=True)
+        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE'), sticky=True)
