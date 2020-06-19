@@ -63,7 +63,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
 
     # trying to award self
     elif comment.author == comment.submission.author:
-        comment.reply(os.getenv('ERROR_OS_SELF_AWARD'))
+        comment.reply(os.getenv('ERROR_SELF_AWARD'))
         continue
 
     # giving more than five nugs
@@ -71,13 +71,17 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         comment.reply(os.getenv('ERROR_TOO_MANY_NUGS'))
         continue
 
+    # trying to give negative nugs
+    elif amount_given < 1:
+        comment.reply(os.getenv('ERROR_NEGATIVE_NUGS'))
+
     # commenter doesn't have enough nugs
-    elif db.get(comment.author)["available"] != None and db.get(comment.author)["available"] < amount_given:
+    elif db.get(comment.author.name)["available"] != None and db.get(comment.author)["available"] < amount_given:
         comment.reply(os.getenv('ERROR_NOT_ENOUGH_NUGS'))
         continue
 
     # gifter not in db yet
-    if db.get(comment.author)["available"] == None:
+    if db.get(comment.author.name)["available"] == None:
         db.set_available(comment.author, 5)
 
     # receiver not in db yet
