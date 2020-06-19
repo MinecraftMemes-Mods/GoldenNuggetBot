@@ -126,6 +126,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     """
 
     difFrom5 = 5 - op_received_nugs % 5
+    bonusNugs = 0
     if (amount_given >= difFrom5):
         amount_given -= difFrom5
         # hopefully doesn't modify amount_given at all my python is rusty
