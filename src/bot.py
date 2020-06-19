@@ -39,20 +39,17 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     the second argument must either be a number or max, full or all
     i. e. `!nugget max` will transfer all nuggets to poster
     """
-
-    # the weird thing below is regex.
-    # it validates whether the command the user put in actually makes sense
-    # you can see an explenation here: https://regex101.com/r/t6N7q2/1
+    
     try:
-        # checks reply is on one of the bot's stickies
-        if not re.match(r'(!(?:nug|nugget|gold))', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
+        if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
             continue
     except AttributeError: # raised if there is no parent comment
         continue
 
-    # splitting the comment into single words
-    # i. e. `!nug 20` will become ['!nug', '20']
-    amount_given = comment.split()[1]
+    try:
+        amount_given = comment.body.split()[1]
+    except IndexError:
+        amount_given = 1
 
     # commenter too young and doesn't meet karma requirements
     if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and comment.author.link_karma + comment.author.comment_karma < 100:
