@@ -1,13 +1,9 @@
 import sqlite3
 
 
-class NugDatabase():
+class Database():
     """
     Class used for communicating with the DB
-    Table: nuggets
-    0|username|TEXT|0||1
-    1|amount_received|INTEGER|0||0
-    2|amount_available|INTEGER|0||0
     """
 
     def set_available(self, username: str, amount: int) -> None:
@@ -44,13 +40,7 @@ class NugDatabase():
                 'available': results[1]
             }
 
-    def __init__(self):
-        self.conn = sqlite3.connect('nug.db')
-        self.c = self.conn.cursor()
-
-
-class PostDb():
-    """Database used for logging posts"""
+    # *** Managing Processed Posts ***
 
     def add_post(self, postid: str) -> None:
         """Add a post to the DB"""
@@ -61,7 +51,24 @@ class PostDb():
 
     def check_post(self, postid: str) -> bool:
         """Check whether the post is already in DB"""
+
         self.c.execute('SELECT 1 FROM posts WHERE "postid"=?;', (postid,))
+        return True if self.c.fetchall() is not None else False
+
+    # *** Managing Processed Comments ***
+
+    def add_comment(self, commentid: str):
+        """Add a comment to the DB"""
+
+        self.c.execute(
+            'INSERT INTO comments VALUES (?) ON CONFLICT DO NOTHING;', (commentid,))
+        self.conn.commit()
+
+    def check_comment(self, commentid: str):
+        """Check whether the comment has already been processed"""
+
+        self.c.execute(
+            'SELECT 1 FROM comments WHERE "commentid"=?', (commentid,))
         return True if self.c.fetchall() is not None else False
 
     def __init__(self):

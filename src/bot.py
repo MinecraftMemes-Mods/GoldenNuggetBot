@@ -25,7 +25,7 @@ reddit = praw.Reddit(
     user_agent="r/MinecraftMemes' GoldenNuggetBot"
 )
 
-db = database.NugDatabase()
+db = database.Database()
 
 # database for logging already processed comments
 comment_db = sqlite3.connect('comments.db')
@@ -96,4 +96,4 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     comment.reply(os.getenv('SUCCESS'))
 
     for post in reddit.subreddit("xeothtest").new(limit=10):
-        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE', sticky=True)
+        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE'), sticky=True)
