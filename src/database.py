@@ -71,6 +71,15 @@ class Database():
             'SELECT 1 FROM comments WHERE "commentid"=?', (commentid,))
         return True if self.c.fetchall() is not None else False
 
+    # *** Leaderboard ***
+
+    def get_leaderboard(self) -> list:
+        """Returns top 10 users ordered by the amount of received """
+        self.c.execute(
+            'SELECT username, amount_received FROM nuggets ORDER BY amount_received DESC;'
+        )
+        return self.c.fetchmany(10)
+
     def __init__(self):
         self.conn = sqlite3.connect('nug.db')
         self.c = self.conn.cursor()
