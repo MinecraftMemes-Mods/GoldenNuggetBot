@@ -56,7 +56,7 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     # creates database entry for commenter if required
     if db.get(commenter) == None:
         db.set_available(commenter, 3)
-        db.received(commenter, 0)
+        db.set_received(commenter, 0)
 
     # setting some more helpful variables
     commenter_award_nugs = db.get(commenter)["available"]
