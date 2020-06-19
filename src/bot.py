@@ -36,10 +36,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments(skip_existing=True)
     i. e. `!nugget max` will transfer all nuggets to poster
     """
 
-    if db.check_comment(comment.id): # breaks completely when comments previously processed are reached
+    # breaks completely when comments previously processed are reached
+    if db.check_comment(comment.id):
         break
 
-    db.comment_add(comment.id)
+    db.add_comment(comment.id)
 
     try:
         if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
@@ -155,11 +156,13 @@ for comment in reddit.subreddit('xeothtest').stream.comments(skip_existing=True)
         comment.reply("SUCCESS_MESSAGE")
 
     # updates flair
-    reddit.subreddit("xeothtest").flair.set(commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
-    reddit.subreddit("xeothtest").flair.set(op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
+    reddit.subreddit("xeothtest").flair.set(
+        commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
+    reddit.subreddit("xeothtest").flair.set(
+        op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
 
 for post in reddit.subreddit("xeothtest").stream.posts(skip_existing=True):
-    if db.check_post(post.id): # breaks completely when posts previously processed are reached
+    if db.check_post(post.id):  # breaks completely when posts previously processed are reached
         break
 
     db.add_post(post.id)
