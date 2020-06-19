@@ -39,11 +39,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
     the second argument must either be a number or max, full or all
     i. e. `!nugget max` will transfer all nuggets to poster
     """
-    
+
     try:
         if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
             continue
-    except AttributeError: # raised if there is no parent comment
+    except AttributeError:  # raised if there is no parent comment
         continue
 
     try:
@@ -53,31 +53,35 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
 
     # commenter too young and doesn't meet karma requirements
     if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and comment.author.link_karma + comment.author.comment_karma < 100:
-        comment.reply("ERROR_MESSAGE")
+        comment.reply(os.getenv('ERROR_REQUIREMENTS'))
         continue
 
     # if author deletes their own post/account
     elif not comment.submission.author:
-        comment.reply("ERROR_MESSAGE")
+        comment.reply(os.getenv('ERROR_ACC_DELETED'))
         continue
 
     # trying to award self
     elif comment.author == comment.submission.author:
-        comment.reply("ERROR_MESSAGE")
+        comment.reply(os.getenv('ERROR_SELF_AWARD'))
         continue
 
     # giving more than five nugs
     elif amount_given > 5:
-        comment.reply("ERROR_MESSAGE")
+        comment.reply(os.getenv('ERROR_TOO_MANY_NUGS'))
         continue
 
+    # trying to give negative nugs
+    elif amount_given < 1:
+        comment.reply(os.getenv('ERROR_NEGATIVE_NUGS'))
+
     # commenter doesn't have enough nugs
-    elif db.get(comment.author)["available"] != None and db.get(comment.author)["available"] < amount_given:
-        comment.reply("ERROR MESSAGE")
+    elif db.get(comment.author.name)["available"] != None and db.get(comment.author)["available"] < amount_given:
+        comment.reply(os.getenv('ERROR_NOT_ENOUGH_NUGS'))
         continue
 
     # gifter not in db yet
-    if db.get(comment.author)["available"] == None:
+    if db.get(comment.author.name)["available"] == None:
         db.set_available(comment.author, 5)
 
     # receiver not in db yet
@@ -85,10 +89,11 @@ for comment in reddit.subreddit('xeothtest').stream.comments():
         db.set_received(comment.author, 0)
 
     # performs transactions
-    db.set_received(comment.submission.author, db.get(comment.submission.author)["received"] + amount_given)
-    db.set_available(comment.author, db.get(comment.author)["available"] - amount_given)
-    comment.reply("SUCCESS_MESSAGE")
+    db.set_received(comment.submission.author, db.get(
+        comment.submission.author)["received"] + amount_given)
+    db.set_available(comment.author, db.get(
+        comment.author)["available"] - amount_given)
+    comment.reply(os.getenv('SUCCESS'))
 
-for post in reddit.subreddit("xeothtest").new():
-    comment.mod.distinguish("STICKIED_MESSAGE", sticky=True)
-
+    for post in reddit.subreddit("xeothtest").new():
+        comment.mod.distinguish(os.getenv('STICKIED_MESSAGE', sticky=True)
