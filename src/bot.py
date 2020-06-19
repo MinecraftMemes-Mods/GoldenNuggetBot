@@ -3,8 +3,8 @@ import os
 import sqlite3
 import re
 import time
+import database
 from dotenv import load_dotenv
-from database import Database
 load_dotenv()
 
 
@@ -25,7 +25,7 @@ reddit = praw.Reddit(
     user_agent="r/MinecraftMemes' GoldenNuggetBot"
 )
 
-db = Database()
+db = database.NugDatabase()
 
 # database for logging already processed comments
 comment_db = sqlite3.connect('comments.db')

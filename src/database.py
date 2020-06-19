@@ -1,7 +1,7 @@
 import sqlite3
 
 
-class Database():
+class NugDatabase():
     """
     Class used for communicating with the DB
     Table: nuggets
@@ -43,6 +43,26 @@ class Database():
                 'received': results[0],
                 'available': results[1]
             }
+
+    def __init__(self):
+        self.conn = sqlite3.connect('nug.db')
+        self.c = self.conn.cursor()
+
+
+class PostDb():
+    """Database used for logging posts"""
+
+    def add_post(self, postid: str) -> None:
+        """Add a post to the DB"""
+
+        self.c.execute(
+            'INSERT INTO posts VALUES (?) ON CONFLICT DO NOTHING;', (postid,))
+        self.conn.commit()
+
+    def check_post(self, postid: str) -> bool:
+        """Check whether the post is already in DB"""
+        self.c.execute('SELECT 1 FROM posts WHERE "postid"=?;', (postid,))
+        return True if self.c.fetchall() is not None else False
 
     def __init__(self):
         self.conn = sqlite3.connect('nug.db')
