@@ -92,11 +92,11 @@ while True:
         if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
             continue
 
+        # mark comment as checked
+        db.add_comment(comment.id)
+
         # *** Commands ***
         if comment.body.startswith('!nug'):
-
-            # mark comment as checked
-            db.add_comment(comment.id)
 
             # setting some helpful variables
             commenter = comment.author.name  # person who is giving award
