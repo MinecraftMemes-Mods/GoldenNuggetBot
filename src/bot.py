@@ -56,10 +56,6 @@ reddit = praw.Reddit(
 
 db = Database()
 
-# database for logging already processed comments
-comment_db = sqlite3.connect('comments.db')
-comm_curs = comment_db.cursor()
-
 start_time = time.time()
 next_refresh_time = start_time + 1 * 60  # 50 minutes after
 # print(start_time)
