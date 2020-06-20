@@ -14,29 +14,22 @@ stickied_message = "Reply to this comment to award nugget(s) to OP if you feel t
 
 #dynamic responses
 def reply_account_too_new(commenter):
-    ret = ""
-    ret += "Hi there " + commenter + "! Unfortunately, I am unable to fulfill your request."
-    ret += "\n\nTo prevent cheating, users with low karma and/or new accounts are unable to award nuggets. However, *you can still receive them!*"
+    ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    
+    To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
     return ret
+
 def reply_not_enough_nugs(commenter, award_nugs):
-    ret = commenter
-    ret += ", you do not have that many voting nuggets!\n\n"
-    ret += "You have **" + str(award_nugs) + "** available to award."
+    ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    
+    You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
     return ret
+
 def reply_success(commenter, amount_given, award_nugs, op, received_nugs, bonus_nugs):
-    ret = commenter + ", you gave **" + str(amount_given)
-    if (amount_given == 1): 
-        ret += "** nugget to "
-    else:
-        ret += "** nuggets to "
-    ret += op +", bringing their total nuggets received to **" + str(received_nugs) + "**."
-    if (bonus_nugs > 0):
-        ret += " Because of your award, " + op + " has received "
-        if (bonus_nugs == 1):
-            ret += "**1** additional nugget that they can award to others."
-        else:
-            ret += "**" + str(bonus_nugs) + "** additional nuggets that they can award to others."
-    ret += "\n\n " + commenter + ", you have **" + str(award_nugs) + "** remaining to give to others."
+    ret = f"{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**. "
+    if bonus_nugs:
+        ret += f"Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others."
+            
     return ret        
 
 def int_conv(string: str) -> bool:
@@ -46,7 +39,6 @@ def int_conv(string: str) -> bool:
         return True
     except ValueError:
         return False
-
 
 reddit = praw.Reddit(
     username=os.getenv('BOT_USERNAME'),
@@ -69,22 +61,25 @@ next_refresh_time = start_time + 1 * 60 #50 minutes after
 submission_stream = reddit.subreddit("Minecraftmeme").stream.submissions(skip_existing=True, pause_after=0)
 comment_stream = reddit.subreddit('Minecraftmeme').stream.comments(skip_existing=True, pause_after=0)
 print("awaiting comments/posts")
+
 while True:
     #check if needed to refresh token
     if (time.time() > next_refresh_time):
         print("t")
         next_refresh_time += 1 * 60 #50 minutes after
     for submission in submission_stream:
-        if submission is None:
+        if not submission or db.check_post(submission.id): 
             break
+            
         print("detected post")
         db.add_post(submission.id)
         comment_made = submission.reply(stickied_message)
         comment_made.mod.distinguish("yes", sticky=True)
         print("made comment")
+        
     for comment in comment_stream:
-        if comment is None:
-            break        
+        if not comment or db.check_comment(comment.id):
+            break
         """
         Possible ways of awarding are !nugget, !nug and !gold
         the first argument must be the username (should not matter whether preceded by u/ or not)
@@ -152,8 +147,8 @@ while True:
             continue
     
         # more exception handling
-        # negative gift arg
-        if amount_given <= 0:
+        # invalid gift arg
+        if not int_conv(amount_given) or amount_given <= 0:
             print("invalid format, continuing")
             comment_made = comment.reply(invalid_format)
             comment_made.mod.distinguish()
@@ -209,9 +204,9 @@ while True:
 
         dif_from_5 = 5 - op_received_nugs % 5
         bonus_nugs = 0
-        if (amount_given >= dif_from_5):
+        
+        if amount_given >= dif_from_5:
             amount_given -= dif_from_5
-            # hopefully doesn't modify amount_given at all my python is rusty
             bonus_nugs += amount_given // 5 + 1
             op_award_nugs += bonus_nugs
             amount_given += dif_from_5
@@ -225,11 +220,14 @@ while True:
         db.set_available(op, op_award_nugs)
     
         # update nugflair
-
+        reddit.subreddit("minecraftmeme").flair.set(commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
+        reddit.subreddit("minecraftmeme").flair.set(op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
+        
         # log comment
     
         comment_made = comment.reply(reply_success(commenter, amount_given, commenter_award_nugs, op, op_received_nugs, bonus_nugs))
         comment_made.mod.distinguish()
         print("successful transaction")
+        
     #other things?
-    time.sleep(0.5)
+    time.sleep(60)
