@@ -89,23 +89,17 @@ while True:
     for comment in comment_stream:
         if not comment or db.check_comment(comment.id):
             break
-        """
-        Possible ways of awarding are !nugget, !nug and !gold
-        the first argument must be the username (should not matter whether preceded by u/ or not)
-        the second argument must either be a number or max, full or all
-        i. e. `!nugget max` will transfer all nuggets to poster
-        """
-        print("detected comment")
-        print(comment.body)
+
+        print(f'Detected comment: {comment.body}')
 
         # checking the validity of the comment
-        if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
+        if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name or db.check_comment(comment.id):
             continue
 
         # *** Commands ***
         if comment.body.startswith('!nug'):
 
-            # checks if comment has already been checked
+            # mark comment as checked
             db.add_comment(comment.id)
 
             # setting some helpful variables
@@ -132,8 +126,6 @@ while True:
 
             # splitting the comment into single words
             # i. e. `!nug 20` will become ['!nug', '20']
-            # placeholder, since you can't just declare variables in python REEEEEEEEEEEEEEEEEEEEE
-            nugs_given = 0
             try:
                 nugs_given = comment.body.split(' ')[1]
             except IndexError:  # because if someone just did !nug meaning 1 nugget
