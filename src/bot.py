@@ -63,7 +63,7 @@ print("awaiting comments/posts")
 
 while True:
     for submission in submission_stream:
-        if not submission or db.check_comment(comment.id): 
+        if not submission or db.check_post(submission.id): 
             break
             
         print("detected post")
