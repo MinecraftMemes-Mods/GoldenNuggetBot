@@ -55,13 +55,18 @@ comment_db = sqlite3.connect('comments.db')
 comm_curs = comment_db.cursor()
 
 start_time = time.time()
-
+next_refresh_time = start_time + 1 * 60 #50 minutes after
+#print(start_time)
 # listening for new comments + submissions
 submission_stream = reddit.subreddit("Minecraftmeme").stream.submissions(skip_existing=True, pause_after=0)
 comment_stream = reddit.subreddit('Minecraftmeme').stream.comments(skip_existing=True, pause_after=0)
 print("awaiting comments/posts")
 
 while True:
+    #check if needed to refresh token
+    if (time.time() > next_refresh_time):
+        print("t")
+        next_refresh_time += 1 * 60 #50 minutes after
     for submission in submission_stream:
         if not submission or db.check_post(submission.id): 
             break
@@ -75,22 +80,21 @@ while True:
     for comment in comment_stream:
         if not comment or db.check_comment(comment.id):
             break
-            
-        print("detected comment")
         """
         Possible ways of awarding are !nugget, !nug and !gold
         the first argument must be the username (should not matter whether preceded by u/ or not)
         the second argument must either be a number or max, full or all
         i. e. `!nugget max` will transfer all nuggets to poster
         """
-    
+        print("detected comment")
+        print(comment.body)
         try:
-            if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot":
+            if not re.match(r'!(nug|nugget|gold)( \d)?', comment.body) or not comment.parent().stickied or not comment.parent().author.name == "GoldenNugBot" or comment.author.name == "GoldenNugBot":
                 print("not a nug action, continuing")
                 continue
         except AttributeError:  # raised if there is no parent comment
             continue
-        
+
         #checks if comment has already been checked
         db.add_comment(comment.id)
     
@@ -110,7 +114,7 @@ while True:
         # creates database entry for commenter if required
         if db.get(commenter) == None:
             print("creating commenter db")
-            db.set_available(commenter, 3)
+            db.set_available(commenter, 10000)
             db.set_received(commenter, 0)
     
         # setting some more helpful variables
@@ -119,15 +123,28 @@ while True:
         # splitting the comment into single words
         # i. e. `!nug 20` will become ['!nug', '20']
         # placeholder, since you can't just declare variables in python REEEEEEEEEEEEEEEEEEEEE
-        amount_given = 0
+        nugs_given = 0
         try:
-            amount_given = comment.body.split(' ')[1]
+            nugs_given = comment.body.split(' ')[1]
         except IndexError:  # because if someone just did !nug meaning 1 nugget
-            amount_given = 1
+            nugs_given = 1
     
         # converts valid text synonyms to their nugget amounts
-        if amount_given in ("max", "full", "all", "everything"):
-            amount_given = commenter_award_nugs
+        if nugs_given in ("max", "full", "all", "everything"):
+            nugs_given = commenter_award_nugs
+        
+        try:
+            amount_given = int(nugs_given)
+        except TypeError:
+            print("invalid format, continuing")
+            comment_made = comment.reply(invalid_format)
+            comment_made.mod.distinguish()
+            continue 
+        except ValueError:
+            print("invalid format, continuing")
+            comment_made = comment.reply(invalid_format)
+            comment_made.mod.distinguish()
+            continue
     
         # more exception handling
         # invalid gift arg
@@ -154,7 +171,7 @@ while True:
         # creates database entry for op if required
         if db.get(op) == None:
             print("creating db for op")
-            db.set_available(op, 3)
+            db.set_available(op, 10000)
             db.set_received(op, 0)
     
         # setting some more helpful variables
