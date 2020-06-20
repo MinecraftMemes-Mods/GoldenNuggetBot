@@ -64,9 +64,9 @@ start_time = time.time()
 next_refresh_time = start_time + 1 * 60  # 50 minutes after
 # print(start_time)
 # listening for new comments + submissions
-submission_stream = reddit.subreddit("Minecraftmeme").stream.submissions(
+submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
-comment_stream = reddit.subreddit('Minecraftmeme').stream.comments(
+comment_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.comments(
     skip_existing=True, pause_after=0)
 print("awaiting comments/posts")
 
@@ -223,9 +223,9 @@ while True:
             db.set_available(op, op_award_nugs)
 
             # update nugflair
-            reddit.subreddit("minecraftmeme").flair.set(
+            reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
                 commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
-            reddit.subreddit("minecraftmeme").flair.set(
+            reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
                 op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
 
             # log comment
