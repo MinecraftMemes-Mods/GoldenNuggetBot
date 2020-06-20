@@ -187,9 +187,9 @@ while True:
 
         dif_from_5 = 5 - op_received_nugs % 5
         bonus_nugs = 0
-        if (amount_given >= dif_from_5):
+        
+        if amount_given >= dif_from_5:
             amount_given -= dif_from_5
-            # hopefully doesn't modify amount_given at all my python is rusty
             bonus_nugs += amount_given // 5 + 1
             op_award_nugs += bonus_nugs
             amount_given += dif_from_5
