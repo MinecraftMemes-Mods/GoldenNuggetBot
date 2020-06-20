@@ -28,8 +28,7 @@ def reply_not_enough_nugs(commenter, award_nugs):
 def reply_success(commenter, amount_given, award_nugs, op, received_nugs, bonus_nugs):
     ret = f"{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**. "
     if bonus_nugs:
-        ret += f"Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others."
-            
+        ret += f"Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others."     
     return ret        
 
 def int_conv(string: str) -> bool:
@@ -65,7 +64,7 @@ print("awaiting comments/posts")
 while True:
     #check if needed to refresh token
     if (time.time() > next_refresh_time):
-        print("t")
+        print("still running")
         next_refresh_time += 1 * 60 #50 minutes after
     for submission in submission_stream:
         if not submission or db.check_post(submission.id): 
