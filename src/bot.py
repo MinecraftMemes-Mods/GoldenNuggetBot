@@ -3,6 +3,7 @@ import os
 import sqlite3
 import re
 import time
+from datetime import datetime
 from dotenv import load_dotenv
 from database import Database
 load_dotenv()
@@ -65,10 +66,10 @@ print("awaiting comments/posts")
 while True:
     #check if needed to refresh token
     if (time.time() > next_refresh_time):
-        print("t")
+        print("still alive as of " + str(datetime.now()))
         next_refresh_time += 1 * 60 #50 minutes after
     for submission in submission_stream:
-        if not submission or db.check_post(submission.id): 
+        if not submission: 
             break
             
         print("detected post")
@@ -78,7 +79,7 @@ while True:
         print("made comment")
         
     for comment in comment_stream:
-        if not comment or db.check_comment(comment.id):
+        if not comment:
             break
         """
         Possible ways of awarding are !nugget, !nug and !gold
@@ -230,4 +231,4 @@ while True:
         print("successful transaction")
         
     #other things?
-    time.sleep(60)
+    time.sleep(0.5)
