@@ -91,6 +91,13 @@ while True:
         except AttributeError:  # raised if there is no parent comment
             continue
         
+        # bal command
+        if re.match(r"!bal", comment.body): # as regex so we can add matches easily if needed
+            comment.reply(f"""**Here is your balance**:
+            Vote nugs: {db.get(comment.author["available"])}
+            Received nugs: {db.get(comment.author["received"])}""")
+            continue
+            
         #checks if comment has already been checked
         db.add_comment(comment.id)
     
