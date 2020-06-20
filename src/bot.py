@@ -89,7 +89,7 @@ while True:
         print(f'Detected comment: {comment.body}')
 
         # checking the validity of the comment
-        if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name or db.check_comment(comment.id):
+        if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
             continue
 
         # *** Commands ***
