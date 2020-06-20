@@ -230,4 +230,4 @@ while True:
         print("successful transaction")
         
     #other things?
-    time.sleep(60)
+    time.sleep(1)
