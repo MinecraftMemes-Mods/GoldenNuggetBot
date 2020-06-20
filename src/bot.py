@@ -11,10 +11,9 @@ load_dotenv()
 invalid_format = "I wasn't able to understand your request. Valid format is\n\n```!nug (amount of awarded nuggets)```"
 award_yourself = "Nice try OP, but you cannot award your own posts! Award your voting nuggets to deserving posts from others!"
 stickied_message = "Reply to this comment to award nugget(s) to OP if you feel this meme is deserving."
+not_in_db = "You have not gifted or received any nugs yet."""
 
 # dynamic responses
-
-
 def reply_account_too_new(commenter):
     ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
     
@@ -58,7 +57,7 @@ db = Database()
 
 start_time = time.time()
 next_refresh_time = start_time + 1 * 60  # 50 minutes after
-# print(start_time)
+
 # listening for new comments + submissions
 submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
@@ -68,8 +67,8 @@ print("awaiting comments/posts")
 
 while True:
     # check if needed to refresh token
-    if (time.time() > next_refresh_time):
-        print("t")
+    if time.time() > next_refresh_time:
+        print("50 min cycle completed")
         next_refresh_time += 1 * 60  # 50 minutes after
 
     for submission in submission_stream:
@@ -87,13 +86,13 @@ while True:
             break
 
         print(f'Detected comment: {comment.body}')
+        
+        # mark comment as checked
+        db.add_comment(comment.id)
 
         # checking the validity of the comment
         if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
             continue
-
-        # mark comment as checked
-        db.add_comment(comment.id)
 
         # *** Commands ***
         if comment.body.startswith('!nug'):
@@ -133,12 +132,7 @@ while True:
 
             try:
                 amount_given = int(nugs_given)
-            except TypeError:
-                print("invalid format, continuing")
-                comment_made = comment.reply(invalid_format)
-                comment_made.mod.distinguish()
-                continue
-            except ValueError:
+            except (TypeError, ValueError):
                 print("invalid format, continuing")
                 comment_made = comment.reply(invalid_format)
                 comment_made.mod.distinguish()
@@ -170,7 +164,7 @@ while True:
             # creates database entry for op if required
             if db.get(op) == None:
                 print("creating db for op")
-                db.set_available(op, 10000)
+                db.set_available(op, 5)
                 db.set_received(op, 0)
 
             # setting some more helpful variables
@@ -235,9 +229,14 @@ while True:
 
         # bal command
         elif comment.body.startswith('!bal'):
-            comment.reply(f"""**Here is your balance**:
-            Vote nugs: {db.get(comment.author.name)['available']}
-            Received nugs: {db.get(comment.author.name)['received']}""")
+            if db.get(comment.author.name)["available"] == None and db.get(comment.author.name)["received"] == None:
+                print("user not in database")
+                comment_made = comment.reply(not_in_db)
+                comment_made.mod_distinguish()
+            else:   
+                comment.reply(f"""**Here is your balance**:
+                Vote nugs: {db.get(comment.author.name)['available']}
+                Received nugs: {db.get(comment.author.name)['received']}""")
             continue
 
     # other things?
