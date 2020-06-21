@@ -32,6 +32,12 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 `!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
 """
 
+banned = f"""
+You have been banned from the bot.
+
+*If you think that's a mistake, you can [message the moderation team at r/{os.getenv('SUBREDDIT')}](https://reddit.com/message/compose?to=/r/{os.getenv('SUBREDDIT')})*
+"""
+
 # dynamic responses
 
 
@@ -90,13 +96,15 @@ print("awaiting comments/posts")
 
 while True:
     # check if needed to refresh token
-    if time.time() > next_refresh_time:
-        print("50 min cycle completed")
-        next_refresh_time += 1 * 60  # 50 minutes after
+    # if time.time() > next_refresh_time:
+    #     print("50 min cycle completed")
+    #     next_refresh_time += 1 * 60  # 50 minutes after
 
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
             break
+        elif db.check_ban(submission.author.name):
+            continue
 
         print(f'Detected post: {submission.id}')
         db.add_post(submission.id)
@@ -124,7 +132,12 @@ while True:
             commenter = comment.author.name  # person who is giving award
             op = comment.submission.author.name  # person receiving award
 
-            # exception handling
+            # *** Exception Handling ***
+
+            # author banned
+            if db.check_ban(submission.author.username):
+                continue
+
             # author too young and doesn't meet karma requirements
             # (moved from other exception handling to make it so db entry isn't created if author is invalid)
             if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
