@@ -96,9 +96,9 @@ print("awaiting comments/posts")
 
 while True:
     # check if needed to refresh token
-    # if time.time() > next_refresh_time:
-    #     print("50 min cycle completed")
-    #     next_refresh_time += 1 * 60  # 50 minutes after
+    if time.time() > next_refresh_time:
+        print("50 min cycle completed")
+        next_refresh_time += 1 * 60  # 50 minutes after
 
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
@@ -122,7 +122,7 @@ while True:
         db.add_comment(comment.id)
 
         # checking the validity of the comment
-        if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
+        if comment.is_root or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
             continue
 
         # *** Commands ***
