@@ -90,10 +90,13 @@ class Database():
         )
         self.conn.commit()
 
+    def check_ban(self, username) -> bool:
+        """Check whether a user is banned"""
+
+        self.c.execute('SELECT 0 FROM banned WHERE "username"=?', (username,))
+
+        return True if self.c.fetchone() is not None else False
+
     def __init__(self):
         self.conn = sqlite3.connect('nug.db')
         self.c = self.conn.cursor()
-
-
-db = Database()
-db.ban('mikau', 'makau')
