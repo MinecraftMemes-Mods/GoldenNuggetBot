@@ -297,6 +297,7 @@ while True:
 
             continue
 
+        # TODO: Add log messages, but after I create a logger class
         elif comment.body.startswith('!unban'):
             if comment.author.name not in moderators:
                 continue
@@ -345,6 +346,18 @@ while True:
                 amount = int(amount)
 
             db.set_available(comment.author.name, amount)
+
+        elif comment.body.startswith('!reset'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                user = comment.body.split()[1]
+            except IndexError:
+                continue
+
+            db.set_available(user, os.getenv('DEFAULT_AVAILABLE_NUGGETS'))
+            db.set_received(user, 0)
 
     # other things?
     time.sleep(1)
