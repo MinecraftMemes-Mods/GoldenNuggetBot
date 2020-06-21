@@ -11,23 +11,31 @@ load_dotenv()
 invalid_format = """
 I wasn't able to understand your request, check the formatting of your command!
 """
+
 award_yourself = """
 Nice try OP, but you cannot award your own posts! Give your voting nuggets to deserving posts from others!
 """
+
 stickied_message = """
 Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
 
 # Commands
 
-## !nug
+# !nug
 
 `!nug <amount>` - Awards the chosen amount
 
 `!nug max` - Awards all available nugs
 
-## !bal
+# !bal
 
 `!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
+"""
+
+banned = f"""
+You have been banned from the bot.
+
+*If you think that's a mistake, you can [message the moderation team at r/{os.getenv('SUBREDDIT')}](https://reddit.com/message/compose?to=/r/{os.getenv('SUBREDDIT')})*
 """
 
 # dynamic responses
@@ -67,6 +75,8 @@ db = Database()
 start_time = time.time()
 next_refresh_time = start_time + 1 * 60  # 50 minutes after
 
+moderators = os.getenv('MODERATORS').split(',')
+
 # listening for new comments + submissions
 submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
@@ -83,6 +93,10 @@ while True:
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
             break
+        elif db.check_ban(submission.author.name):
+            print(
+                f'{submission.author.name} is banned. Will not process the submission further.')
+            continue
 
         print(f'Detected post: {submission.id}')
         db.add_post(submission.id)
@@ -94,13 +108,13 @@ while True:
         if not comment or db.check_comment(comment.id):
             break
 
-        print(f'Detected comment: {comment.body}')
-        
+        print(f'Detected comment: {comment.id}')
+
         # mark comment as checked
         db.add_comment(comment.id)
 
         # checking the validity of the comment
-        if comment.is_root() or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
+        if comment.is_root or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
             continue
 
         # *** Commands ***
@@ -110,7 +124,14 @@ while True:
             commenter = comment.author.name  # person who is giving award
             op = comment.submission.author.name  # person receiving award
 
-            # exception handling
+            # *** Exception Handling ***
+
+            # author banned
+            if db.check_ban(commenter):
+                print(
+                    f'{commenter} is banned. Will not process the comment further.')
+                continue
+
             # author too young and doesn't meet karma requirements
             # (moved from other exception handling to make it so db entry isn't created if author is invalid)
             if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
@@ -188,18 +209,18 @@ while True:
 
             """
             This section gives the OP an award nug for hitting a multiple of 5 received nuggets
-        
+
             Now, this might look weird, you might think "why isn't this just if op_received_nugs % 5 == 0, op_award_nugs += 1"
             Well, I (coder) thought about it some, and it turns out that doesn't really work. Let me elaborate
-            
+
             Since you can award multiple nuggets to the same poster, and since in theory someone could obtain more than 5 award
             nuggets (either via award nug resets or receivals), someone could in theory award an amount that causes OP to go past
-            a multiple of 5 but not stay on it, and potentially multiple times. 
-        
-            For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug, 
+            a multiple of 5 but not stay on it, and potentially multiple times.
+
+            For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug,
             but the former check wouldn't work. Or more extreme, OP has received 4, someone awards them 8. They would have received
             12 total, they should gain 2 award nugs (for 5 and 10 received nuggets), but again the check wouldn't work
-        
+
             This little bit of code accounts for that, by finding the difference needed for the next level, and then seeing how much
             it goes over and adds accordingly. It should work
             """
@@ -225,7 +246,7 @@ while True:
             # checks flair isn't being overwritten, unless it's already a nug one
             if not comment.user_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
-                    commenter, f"Available: {commenter_award_nugs} | Received: {commenter_award_nugs} :golden_nug:") # sets flair
+                    commenter, f"Available: {commenter_award_nugs} | Received: {commenter_award_nugs} :golden_nug:")  # sets flair
             if not comment.submission.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.submission.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
                     op, f"Available: {op_award_nugs} | Received: {op_award_nugs} :golden_nug:")
@@ -248,8 +269,85 @@ while True:
             comment.reply(f"""**Here is your balance**:
             Vote nugs: **{db.get(comment.author.name)['available']}**
             Received nugs: **{db.get(comment.author.name)['received']}**""")
-            
+
             continue
+
+        elif comment.body.startswith('!ban'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                banned = comment.body.split()[1]
+            except IndexError:
+                continue
+
+            print(f'{comment.author.name} requested a ban for {banned}')
+
+            db.ban(banned, comment.author.name)
+
+            continue
+
+        # TODO: Add log messages, but after I create a logger class
+        elif comment.body.startswith('!unban'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                unbanned = comment.body.split()[1]
+            except IndexError:
+                continue
+
+            print(f'{comment.author.name} requested an unban for {unbanned}')
+
+            db.unban(unbanned)
+
+            continue
+
+        elif comment.body.startswith('!setreceived'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                user = comment.body.split()[1]
+                amount = comment.body.split()[2]
+            except IndexError:
+                continue
+
+            if not int_conv(amount):
+                continue
+            else:
+                amount = int(amount)
+
+            db.set_received(comment.author.name, amount)
+
+        elif comment.body.startswith('!setavailable'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                user = comment.body.split()[1]
+                amount = comment.body.split()[2]
+            except IndexError:
+                continue
+
+            if not int_conv(amount):
+                continue
+            else:
+                amount = int(amount)
+
+            db.set_available(comment.author.name, amount)
+
+        elif comment.body.startswith('!reset'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                user = comment.body.split()[1]
+            except IndexError:
+                continue
+
+            db.set_available(user, os.getenv('DEFAULT_AVAILABLE_NUGGETS'))
+            db.set_received(user, 0)
 
     # other things?
     time.sleep(1)
