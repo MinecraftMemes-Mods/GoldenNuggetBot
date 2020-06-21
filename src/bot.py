@@ -213,13 +213,15 @@ while True:
             db.set_available(op, op_award_nugs)
 
             # update nugflair
-            reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
-                commenter, f"Available Nugs: {commenter_award_nugs}|Received Nugs: {commenter_award_nugs}")
-            reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
-                op, f"Available Nugs: {op_award_nugs}|Received Nugs: {op_award_nugs}")
+            # checks flair isn't being overwritten, unless it's already a nug one
+            if not comment.user_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
+                reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
+                    commenter, f"Available: {commenter_award_nugs} | Received: {commenter_award_nugs} :golden_nug:") # sets flair
+            if not comment.submission.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.submission.author_flair_text):
+                reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
+                    op, f"Available: {op_award_nugs} | Received: {op_award_nugs} :golden_nug:")
 
             # log comment
-
             comment_made = comment.reply(reply_success(
                 commenter, amount_given, commenter_award_nugs, op, op_received_nugs, bonus_nugs))
             comment_made.mod.distinguish()
