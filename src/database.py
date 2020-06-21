@@ -52,8 +52,8 @@ class Database():
     def check_post(self, postid: str) -> bool:
         """Check whether the post is already in DB"""
 
-        self.c.execute('SELECT 1 FROM posts WHERE "postid"=?;', (postid,))
-        return True if self.c.fetchall() is not None else False
+        self.c.execute('SELECT 0 FROM posts WHERE "id"=?;', (postid,))
+        return True if self.c.fetchone() is not None else False
 
     # *** Managing Processed Comments ***
 
@@ -68,40 +68,17 @@ class Database():
         """Check whether the comment has already been processed"""
 
         self.c.execute(
-            'SELECT 1 FROM comments WHERE "commentid"=?', (commentid,))
-        return True if self.c.fetchall() is not None else False
+            'SELECT 0 FROM comments WHERE "id"=?', (commentid,))
+        return True if self.c.fetchone() is not None else False
 
     # *** Leaderboard ***
 
     def get_leaderboard(self) -> list:
         """Returns top 10 users ordered by the amount of received """
-
         self.c.execute(
             'SELECT username, amount_received FROM nuggets ORDER BY amount_received DESC;'
         )
         return self.c.fetchmany(10)
-
-    def ban(self, username: str, admin: str) -> None:
-        """Ban a user from the bot"""
-
-        self.c.execute(
-            'INSERT OR IGNORE INTO banned VALUES(?, ?);',
-            (username, admin)
-        )
-        self.conn.commit()
-
-    def check_ban(self, username: str) -> bool:
-        """Check whether a user is banned"""
-
-        self.c.execute('SELECT 0 FROM banned WHERE "username"=?', (username,))
-
-        return True if self.c.fetchone() is not None else False
-
-    def unban(self, username: str) -> None:
-        """Unban a user"""
-
-        self.c.execute('DELETE FROM banned WHERE "username"=?', (username,))
-        self.conn.commit()
 
     def __init__(self):
         self.conn = sqlite3.connect('nug.db')
