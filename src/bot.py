@@ -104,6 +104,8 @@ while True:
         if not submission or db.check_post(submission.id):
             break
         elif db.check_ban(submission.author.name):
+            print(
+                f'{submission.author.name} is banned. Will not process the submission further.')
             continue
 
         print(f'Detected post: {submission.id}')
@@ -116,7 +118,7 @@ while True:
         if not comment or db.check_comment(comment.id):
             break
 
-        print(f'Detected comment: {comment.body}')
+        print(f'Detected comment: {comment.id}')
 
         # mark comment as checked
         db.add_comment(comment.id)
@@ -135,7 +137,9 @@ while True:
             # *** Exception Handling ***
 
             # author banned
-            if db.check_ban(submission.author.username):
+            if db.check_ban(commenter):
+                print(
+                    f'{commenter} is banned. Will not process the comment further.')
                 continue
 
             # author too young and doesn't meet karma requirements
@@ -290,6 +294,21 @@ while True:
             print(f'{comment.author.name} requested a ban for {banned}')
 
             db.ban(banned, comment.author.name)
+
+            continue
+
+        elif comment.body.startswith('!unban'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                unbanned = comment.body.split()[1]
+            except IndexError:
+                continue
+
+            print(f'{comment.author.name} requested an unban for {unbanned}')
+
+            db.unban(unbanned)
 
             continue
 
