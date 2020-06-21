@@ -53,8 +53,7 @@ class Database():
         """Check whether the post is already in DB"""
 
         self.c.execute('SELECT 0 FROM posts WHERE "id"=?;', (postid,))
-        res = self.c.fetchone()
-        return True if res is not None else False
+        return True if self.c.fetchone() is not None else False
 
     # *** Managing Processed Comments ***
 
