@@ -50,7 +50,7 @@ reddit = praw.Reddit(
     password=os.getenv('PASSWORD'),
     client_id=os.getenv('CLIENT_ID'),
     client_secret=os.getenv('CLIENT_SECRET'),
-    user_agent="r/MinecraftMemes' GoldenNuggetBot"
+    user_agent=f"r/{os.getenv('SUBREDDIT')}'s {os.getenv('BOT_USERNAME')}"
 )
 
 db = Database()
