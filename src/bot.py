@@ -11,17 +11,17 @@ load_dotenv()
 invalid_format = """
 I wasn't able to understand your request, check the formatting of your command!
 """
+
 award_yourself = """
 Nice try OP, but you cannot award your own posts! Give your voting nuggets to deserving posts from others!
 """
+
 stickied_message = """
 Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
 
 # Commands
 
 # !nug
-
-`!nug` - Awards one nug
 
 `!nug <amount>` - Awards the chosen amount
 
@@ -39,28 +39,18 @@ You have been banned from the bot.
 """
 
 # dynamic responses
-
-
-def reply_account_too_new(commenter):
-    ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-
-    To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
-    return ret
-
-
-def reply_not_enough_nugs(commenter, award_nugs):
-    ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-
+class DynamicReply:
+    not_enough_nugs = lambda commenter, award_nugs: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
-    return ret
+    
+    account_too_new = lambda commenter: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    
+    To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
+    
+    success = lambda commenter, amount_given, op, received_nugs, bonus_nugs: f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
 
-
-def reply_success(commenter, amount_given, award_nugs, op, received_nugs, bonus_nugs):
-    ret = f"{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**. "
-    if bonus_nugs:
-        ret += f"Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others."
-
-    return ret
+    Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else """{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**."""
 
 
 def int_conv(string: str) -> bool:
@@ -128,7 +118,7 @@ while True:
             continue
 
         # *** Commands ***
-        if comment.body.startswith('!nug'):
+        if comment.body.startswith('!nug') or comment.body.startswith("!gold"):
 
             # setting some helpful variables
             commenter = comment.author.name  # person who is giving award
@@ -145,7 +135,7 @@ while True:
             # author too young and doesn't meet karma requirements
             # (moved from other exception handling to make it so db entry isn't created if author is invalid)
             if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
-                comment_made = comment.reply(reply_account_too_new(commenter))
+                comment_made = comment.reply(DynamicReply.account_too_new(commenter))
                 comment_made.mod.distinguish()
                 print("commenter doesn't meet account reqs, continuing")
                 continue
@@ -190,7 +180,7 @@ while True:
             elif commenter_award_nugs < amount_given:
                 print("not enough nugs, continuing")
                 comment_made = comment.reply(
-                    reply_not_enough_nugs(commenter, commenter_award_nugs))
+                    DynamicReply.not_enough_nugs(commenter, commenter_award_nugs))
                 comment_made.mod.distinguish()
                 continue
 
@@ -262,7 +252,7 @@ while True:
                     op, f"Available: {op_award_nugs} | Received: {op_award_nugs} :golden_nug:")
 
             # log comment
-            comment_made = comment.reply(reply_success(
+            comment_made = comment.reply(DynamicReply.success(
                 commenter, amount_given, commenter_award_nugs, op, op_received_nugs, bonus_nugs))
             comment_made.mod.distinguish()
             print("successful transaction")
