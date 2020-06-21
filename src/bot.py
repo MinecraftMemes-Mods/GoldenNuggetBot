@@ -8,10 +8,29 @@ from database import Database
 load_dotenv()
 
 # static responses
-invalid_format = "I wasn't able to understand your request. Valid format is\n\n```!nug (amount of awarded nuggets)```"
-award_yourself = "Nice try OP, but you cannot award your own posts! Award your voting nuggets to deserving posts from others!"
-stickied_message = "Reply to this comment to award nugget(s) to OP if you feel this meme is deserving."
-not_in_db = "You have not gifted or received any nugs yet."""
+invalid_format = """
+I wasn't able to understand your request, check the formatting of your command!
+"""
+award_yourself = """
+Nice try OP, but you cannot award your own posts! Give your voting nuggets to deserving posts from others!
+"""
+stickied_message = """
+Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
+
+# Commands
+
+## !nug
+
+`!nug` \- Awards one nug
+
+`!nug <amount>` \- Awards the chosen amount
+
+`!nug max` \- Awards all available nugs
+
+## !bal
+
+`!bal` \- Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
+"""
 
 # dynamic responses
 def reply_account_too_new(commenter):
