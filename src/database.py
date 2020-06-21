@@ -75,11 +75,25 @@ class Database():
 
     def get_leaderboard(self) -> list:
         """Returns top 10 users ordered by the amount of received """
+
         self.c.execute(
             'SELECT username, amount_received FROM nuggets ORDER BY amount_received DESC;'
         )
         return self.c.fetchmany(10)
 
+    def ban(self, username: str, admin: str) -> None:
+        """Ban a user from the bot"""
+
+        self.c.execute(
+            'INSERT OR IGNORE INTO banned VALUES(?, ?);',
+            (username, admin)
+        )
+        self.conn.commit()
+
     def __init__(self):
         self.conn = sqlite3.connect('nug.db')
         self.c = self.conn.cursor()
+
+
+db = Database()
+db.ban('mikau', 'makau')
