@@ -36,7 +36,7 @@ class DynamicReply:
     
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
     
-    account_too_new = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    account_too_new = lambda: commenter f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
     
     To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
     
