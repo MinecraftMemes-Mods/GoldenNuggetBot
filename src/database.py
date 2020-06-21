@@ -80,6 +80,30 @@ class Database():
         )
         return self.c.fetchmany(10)
 
+    # *** Banning ***
+
+    def ban(self, username: str, admin: str) -> None:
+        """Ban a user from the bot"""
+
+        self.c.execute(
+            'INSERT OR IGNORE INTO banned VALUES(?, ?);',
+            (username, admin)
+        )
+        self.conn.commit()
+
+    def check_ban(self, username: str) -> bool:
+        """Check whether a user is banned"""
+
+        self.c.execute('SELECT 0 FROM banned WHERE "username"=?', (username,))
+
+        return True if self.c.fetchone() is not None else False
+
+    def unban(self, username: str) -> None:
+        """Unban a user"""
+
+        self.c.execute('DELETE FROM banned WHERE "username"=?', (username,))
+        self.conn.commit()
+
     def __init__(self):
         self.conn = sqlite3.connect('nug.db')
         self.c = self.conn.cursor()
