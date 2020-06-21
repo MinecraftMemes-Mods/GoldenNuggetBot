@@ -19,7 +19,7 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 # Commands
 
-## !nug
+# !nug
 
 `!nug` - Awards one nug
 
@@ -27,7 +27,7 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 `!nug max` - Awards all available nugs
 
-## !bal
+# !bal
 
 `!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
 """
@@ -43,14 +43,14 @@ You have been banned from the bot.
 
 def reply_account_too_new(commenter):
     ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-    
+
     To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
     return ret
 
 
 def reply_not_enough_nugs(commenter, award_nugs):
     ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-    
+
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
     return ret
 
@@ -219,18 +219,18 @@ while True:
 
             """
             This section gives the OP an award nug for hitting a multiple of 5 received nuggets
-        
+
             Now, this might look weird, you might think "why isn't this just if op_received_nugs % 5 == 0, op_award_nugs += 1"
             Well, I (coder) thought about it some, and it turns out that doesn't really work. Let me elaborate
-            
+
             Since you can award multiple nuggets to the same poster, and since in theory someone could obtain more than 5 award
             nuggets (either via award nug resets or receivals), someone could in theory award an amount that causes OP to go past
-            a multiple of 5 but not stay on it, and potentially multiple times. 
-        
-            For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug, 
+            a multiple of 5 but not stay on it, and potentially multiple times.
+
+            For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug,
             but the former check wouldn't work. Or more extreme, OP has received 4, someone awards them 8. They would have received
             12 total, they should gain 2 award nugs (for 5 and 10 received nuggets), but again the check wouldn't work
-        
+
             This little bit of code accounts for that, by finding the difference needed for the next level, and then seeing how much
             it goes over and adds accordingly. It should work
             """
@@ -311,6 +311,40 @@ while True:
             db.unban(unbanned)
 
             continue
+
+        elif comment.body.startswith('!setreceived'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                user = comment.body.split()[1]
+                amount = comment.body.split()[2]
+            except IndexError:
+                continue
+
+            if not int_conv(amount):
+                continue
+            else:
+                amount = int(amount)
+
+            db.set_received(comment.author.name, amount)
+
+        elif comment.body.startswith('!setavailable'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                user = comment.body.split()[1]
+                amount = comment.body.split()[2]
+            except IndexError:
+                continue
+
+            if not int_conv(amount):
+                continue
+            else:
+                amount = int(amount)
+
+            db.set_available(comment.author.name, amount)
 
     # other things?
     time.sleep(1)
