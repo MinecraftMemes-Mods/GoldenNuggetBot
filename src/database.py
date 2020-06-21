@@ -52,8 +52,9 @@ class Database():
     def check_post(self, postid: str) -> bool:
         """Check whether the post is already in DB"""
 
-        self.c.execute('SELECT 1 FROM posts WHERE "postid"=?;', (postid,))
-        return True if self.c.fetchall() is not None else False
+        self.c.execute('SELECT 0 FROM posts WHERE "id"=?;', (postid,))
+        res = self.c.fetchone()
+        return True if res is not None else False
 
     # *** Managing Processed Comments ***
 
@@ -68,8 +69,8 @@ class Database():
         """Check whether the comment has already been processed"""
 
         self.c.execute(
-            'SELECT 1 FROM comments WHERE "commentid"=?', (commentid,))
-        return True if self.c.fetchall() is not None else False
+            'SELECT 0 FROM comments WHERE "id"=?', (commentid,))
+        return True if self.c.fetchone() is not None else False
 
     # *** Leaderboard ***
 
