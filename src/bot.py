@@ -114,7 +114,7 @@ while True:
             continue
 
         # *** Commands ***
-        if comment.body.startswith('!nug'):
+        if comment.body.startswith('!nug') or command.body.startswith("!gold"):
 
             # setting some helpful variables
             commenter = comment.author.name  # person who is giving award
