@@ -21,18 +21,20 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 ## !nug
 
-`!nug` \- Awards one nug
+`!nug` - Awards one nug
 
-`!nug <amount>` \- Awards the chosen amount
+`!nug <amount>` - Awards the chosen amount
 
-`!nug max` \- Awards all available nugs
+`!nug max` - Awards all available nugs
 
 ## !bal
 
-`!bal` \- Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
+`!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
 """
 
 # dynamic responses
+
+
 def reply_account_too_new(commenter):
     ret = f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
     
@@ -77,6 +79,8 @@ db = Database()
 start_time = time.time()
 next_refresh_time = start_time + 1 * 60  # 50 minutes after
 
+moderators = os.getenv('MODERATORS').split(',')
+
 # listening for new comments + submissions
 submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
@@ -105,7 +109,7 @@ while True:
             break
 
         print(f'Detected comment: {comment.body}')
-        
+
         # mark comment as checked
         db.add_comment(comment.id)
 
@@ -235,7 +239,7 @@ while True:
             # checks flair isn't being overwritten, unless it's already a nug one
             if not comment.user_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
-                    commenter, f"Available: {commenter_award_nugs} | Received: {commenter_award_nugs} :golden_nug:") # sets flair
+                    commenter, f"Available: {commenter_award_nugs} | Received: {commenter_award_nugs} :golden_nug:")  # sets flair
             if not comment.submission.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.submission.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
                     op, f"Available: {op_award_nugs} | Received: {op_award_nugs} :golden_nug:")
@@ -258,7 +262,22 @@ while True:
             comment.reply(f"""**Here is your balance**:
             Vote nugs: **{db.get(comment.author.name)['available']}**
             Received nugs: **{db.get(comment.author.name)['received']}**""")
-            
+
+            continue
+
+        elif comment.body.startswith('!ban'):
+            if comment.author.name not in moderators:
+                continue
+
+            try:
+                banned = comment.body.split()[1]
+            except IndexError:
+                continue
+
+            print(f'{comment.author.username} requested a ban for {banned}')
+
+            db.ban(banned, comment.author.username)
+
             continue
 
     # other things?
