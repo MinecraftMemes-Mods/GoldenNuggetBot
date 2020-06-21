@@ -32,7 +32,7 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 # dynamic responses
 class DynamicReply:
-	not_enough_nugs = lambda commenter, award_nugs: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    not_enough_nugs = lambda commenter, award_nugs: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
     
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
     
