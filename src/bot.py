@@ -230,13 +230,14 @@ while True:
         # bal command
         elif comment.body.startswith('!bal'):
             if db.get(comment.author.name)["available"] == None and db.get(comment.author.name)["received"] == None:
-                print("user not in database")
-                comment_made = comment.reply(not_in_db)
-                comment_made.mod_distinguish()
-            else:   
-                comment.reply(f"""**Here is your balance**:
-                Vote nugs: {db.get(comment.author.name)['available']}
-                Received nugs: {db.get(comment.author.name)['received']}""")
+                print("creating db for commenter")
+                db.set_available(commenter, 5)
+                db.set_received(commenter, 0)
+
+            comment.reply(f"""**Here is your balance**:
+            Vote nugs: **{db.get(comment.author.name)['available']}**
+            Received nugs: **{db.get(comment.author.name)['received']}**""")
+            
             continue
 
     # other things?
