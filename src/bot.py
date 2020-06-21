@@ -287,9 +287,9 @@ while True:
             except IndexError:
                 continue
 
-            print(f'{comment.author.username} requested a ban for {banned}')
+            print(f'{comment.author.name} requested a ban for {banned}')
 
-            db.ban(banned, comment.author.username)
+            db.ban(banned, comment.author.name)
 
             continue
 
