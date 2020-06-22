@@ -5,10 +5,10 @@ class Log():
     """Class used to display log messages"""
 
     def info(self, message: str):
-        """Display an info-like message"""
+        """Display a warning message"""
         n = datetime.now().isoformat()
         print(
-            f'{n} - [INFO] - {message}')
+            f'{n} -{self.colors["blue"]} [INFO]{self.colors["reset"]} - {message}')
 
     def warn(self, message: str):
         """Display a warning message"""
@@ -29,9 +29,9 @@ class Log():
             'green': '\033[32m',
             'yellow': '\033[33m',
             'red': '\033[31m',
-            'ok': '\033[34m',
+            'blue': '\033[34m',
         }
 
 
 a = Log()
-a.error('yeet')
+a.info('yeet')
