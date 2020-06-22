@@ -306,12 +306,16 @@ while True:
             for position, user in enumerate(leaderboard, start=1):
                 lead_str += f'{position}. {user[0]} at {user[1]} nuggets\n'
 
-            comment.reply(lead_str)
+            comment_made = comment.reply(lead_str)
+            comment_made.mod.distinguish()
 
             continue
         
         elif comment.body.startswith("!info") or comment.body.startswith("!bal"):
-            comment.reply(info_message)
+            comment_made = comment.reply(info_message)
+            comment_made.mod.distinguish()
+            
+            continue
 
     for submission in mod_submission_stream:
         if not submission or db.check_post(submission.id):
