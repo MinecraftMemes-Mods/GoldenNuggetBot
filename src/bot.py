@@ -3,6 +3,7 @@ import os
 import sqlite3
 import re
 import time
+from log import Log
 from dotenv import load_dotenv
 from database import Database
 load_dotenv()
@@ -39,18 +40,23 @@ You have been banned from the bot.
 """
 
 # dynamic responses
+
+
 class DynamicReply:
-    not_enough_nugs = lambda commenter, award_nugs: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    @staticmethod
+    def not_enough_nugs(commenter, award_nugs): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
 
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
 
-    account_too_new = lambda commenter: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    @staticmethod
+    def account_too_new(commenter): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
 
     To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
 
-    success = lambda commenter, amount_given, op, received_nugs, bonus_nugs: f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
-    
-    Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else """{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**."""
+    @staticmethod
+    def success(commenter, amount_given, op, received_nugs, bonus_nugs): return f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
+
+    Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else f'{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.'
 
 
 def int_conv(string: str) -> bool:
@@ -72,6 +78,8 @@ reddit = praw.Reddit(
 
 db = Database()
 
+log = Log()
+
 start_time = time.time()
 next_refresh_time = start_time + 1 * 60  # 50 minutes after
 
@@ -82,37 +90,34 @@ submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
 comment_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.comments(
     skip_existing=True, pause_after=0)
-mod_submission_stream = reddit.subreddit("MinecraftMeme").stream.submissions(
-    skip_existing=True, pause_after=0)
-mod_comment_stream = reddit.subreddit("MinecraftMeme").stream.comments(
-    skip_existing=True, pause_after=0)
-print("awaiting comments/posts")
+
+log.success("awaiting comments/posts")
 
 while True:
     # check if needed to refresh token
     if time.time() > next_refresh_time:
-        print("50 min cycle completed")
+        log.info("50 min cycle completed")
         next_refresh_time += 1 * 60  # 50 minutes after
 
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
             break
         elif db.check_ban(submission.author.name):
-            print(
+            log.info(
                 f'{submission.author.name} is banned. Will not process the submission further.')
             continue
 
-        print(f'Detected post: {submission.id}')
+        log.info(f'Detected post: {submission.id}')
         db.add_post(submission.id)
         comment_made = submission.reply(stickied_message)
         comment_made.mod.distinguish("yes", sticky=True)
-        print("made comment")
+        log.info("made comment")
 
     for comment in comment_stream:
         if not comment or db.check_comment(comment.id):
             break
 
-        print(f'Detected comment: {comment.id}')
+        log.info(f'Detected comment: {comment.id}')
 
         # mark comment as checked
         db.add_comment(comment.id)
@@ -132,21 +137,22 @@ while True:
 
             # author banned
             if db.check_ban(commenter):
-                print(
+                log.info(
                     f'{commenter} is banned. Will not process the comment further.')
                 continue
 
             # author too young and doesn't meet karma requirements
             # (moved from other exception handling to make it so db entry isn't created if author is invalid)
             if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
-                comment_made = comment.reply(DynamicReply.account_too_new(commenter))
+                comment_made = comment.reply(
+                    DynamicReply.account_too_new(commenter))
                 comment_made.mod.distinguish()
-                print("commenter doesn't meet account reqs, continuing")
+                log.info("commenter doesn't meet account reqs, continuing")
                 continue
 
             # creates database entry for commenter if required
             if db.get(commenter) == None:
-                print("creating commenter db")
+                log.info("creating commenter db")
                 db.set_available(commenter, 10000)
                 db.set_received(commenter, 0)
 
@@ -167,7 +173,7 @@ while True:
             try:
                 amount_given = int(nugs_given)
             except (TypeError, ValueError):
-                print("invalid format, continuing")
+                log.info("invalid format, continuing")
                 comment_made = comment.reply(invalid_format)
                 comment_made.mod.distinguish()
                 continue
@@ -175,14 +181,14 @@ while True:
             # more exception handling
             # invalid gift arg
             if not int_conv(amount_given) or amount_given <= 0:
-                print("invalid format, continuing")
+                log.info("invalid format, continuing")
                 comment_made = comment.reply(invalid_format)
                 comment_made.mod.distinguish()
                 continue
 
             # checks commenter has enough nuggets to award
             elif commenter_award_nugs < amount_given:
-                print("not enough nugs, continuing")
+                log.info("not enough nugs, continuing")
                 comment_made = comment.reply(
                     DynamicReply.not_enough_nugs(commenter, commenter_award_nugs))
                 comment_made.mod.distinguish()
@@ -190,14 +196,14 @@ while True:
 
             # checks poster is not awarding themselves
             elif commenter == op:
-                print("op tried to award themselves, continuing")
+                log.info("op tried to award themselves, continuing")
                 comment_made = comment.reply(award_yourself)
                 comment_made.mod.distinguish()
                 continue
 
             # creates database entry for op if required
             if db.get(op) == None:
-                print("creating db for op")
+                log.info("creating db for op")
                 db.set_available(op, os.getenv("DEFAULT_AVAILABLE_NUGS"))
                 db.set_received(op, 0)
 
@@ -244,7 +250,7 @@ while True:
 
             # update nugflair
             # checks flair isn't being overwritten, unless it's already a nug one
-            if not comment.user_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
+            if not comment.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
                     commenter, f"Received: {commenter_award_nugs} | :golden_nug:")  # sets flair
             if not comment.submission.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.submission.author_flair_text):
@@ -253,16 +259,16 @@ while True:
 
             # log comment
             comment_made = comment.reply(DynamicReply.success(
-                commenter, amount_given, commenter_award_nugs, op, op_received_nugs, bonus_nugs))
+                commenter, amount_given, op, op_received_nugs, bonus_nugs))
             comment_made.mod.distinguish()
-            print("successful transaction")
+            log.success("successful transaction")
 
             continue
 
         # bal command
         elif comment.body.startswith('!bal'):
             if db.get(comment.author.name)["available"] == None and db.get(comment.author.name)["received"] == None:
-                print("creating db for commenter")
+                log.info("creating db for commenter")
                 db.set_available(commenter, os.getenv("DEFAULT_AVAILABLE_NUGS"))
                 db.set_received(commenter, 0)
 
@@ -302,11 +308,10 @@ while True:
             except IndexError:
                 continue
 
-            print(f'{comment.author.name} requested a ban for {banned}')
+            log.warn(f'{comment.author.name} requested a ban for {banned}')
 
             db.ban(banned, comment.author.name)
 
-        # TODO: Add log messages, but after I create a logger class
         # unban's chosen user from bot
         elif comment.body.startswith('!unban'):
             if comment.author.name not in moderators:
@@ -317,7 +322,7 @@ while True:
             except IndexError:
                 continue
 
-            print(f'{comment.author.name} requested an unban for {unbanned}')
+            log.warn(f'{comment.author.name} requested an unban for {unbanned}')
 
             db.unban(unbanned)
 
@@ -330,12 +335,19 @@ while True:
                 user = comment.body.split()[1]
                 amount = comment.body.split()[2]
             except IndexError:
+                log.error(
+                    f'Not enough arguments provided by {comment.author.name}')
                 continue
 
             if not int_conv(amount):
+                log.error(
+                    f'Incorrect arguments provided by {comment.author.name}')
                 continue
             else:
                 amount = int(amount)
+
+            log.warn(
+                f'{comment.author.name} requested to set {user}\'s received nug amount to {amount}')
 
             db.set_received(comment.author.name, amount)
 
@@ -348,12 +360,19 @@ while True:
                 user = comment.body.split()[1]
                 amount = comment.body.split()[2]
             except IndexError:
+                log.error(
+                    f'Not enough arguments provided by {comment.author.name}')
                 continue
 
             if not int_conv(amount):
+                log.error(
+                    f'Incorrect arguments provided by {comment.author.name}')
                 continue
             else:
                 amount = int(amount)
+
+            log.warn(
+                f'{comment.author.name} requested to set {user}\'s received nug amount to {amount}')
 
             db.set_available(comment.author.name, amount)
 
@@ -365,7 +384,11 @@ while True:
             try:
                 user = comment.body.split()[1]
             except IndexError:
+                log.error(
+                    f'Incorrect arguments provided by {comment.author.name}')
                 continue
+
+            log.warn(f'{comment.author.name} requested a reset for {user}')
 
             db.set_available(user, os.getenv('DEFAULT_AVAILABLE_NUGGETS'))
             db.set_received(user, 0)
