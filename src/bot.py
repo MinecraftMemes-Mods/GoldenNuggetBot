@@ -309,6 +309,9 @@ while True:
             comment.reply(lead_str)
 
             continue
+        
+        elif comment.body.startswith("!info") or comment.body.startswith("!bal"):
+            comment.reply(info_message)
 
     for submission in mod_submission_stream:
         if not submission or db.check_post(submission.id):
