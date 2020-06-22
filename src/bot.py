@@ -67,7 +67,7 @@ def int_conv(string: str) -> bool:
     except ValueError:
         return False
 
-    
+
 reddit = praw.Reddit(
     username=os.getenv('BOT_USERNAME'),
     password=os.getenv('PASSWORD'),
@@ -115,7 +115,7 @@ while True:
         db.add_post(submission.id)
         comment_made = submission.reply(stickied_message)
         comment_made.mod.distinguish("yes", sticky=True)
-        log.info("made comment")
+        log.success(f'Made a comment: {comment_made.id}')
 
     for comment in comment_stream:
         if not comment or db.check_comment(comment.id):
@@ -273,7 +273,8 @@ while True:
         elif comment.body.startswith('!bal'):
             if db.get(comment.author.name)["available"] == None and db.get(comment.author.name)["received"] == None:
                 log.info("creating db for commenter")
-                db.set_available(commenter, os.getenv("DEFAULT_AVAILABLE_NUGS"))
+                db.set_available(commenter, os.getenv(
+                    "DEFAULT_AVAILABLE_NUGS"))
                 db.set_received(commenter, 0)
 
             comment.reply(f"""**Here is your balance**:
@@ -286,14 +287,14 @@ while True:
         if not submission or db.check_post(submission.id):
             break
 
-        print(f'Detected second sub post: {submission.id}')
+        log.info(f'Detcted ModSub post: {submission.id}')
         db.add_post(submission.id)
         comment_made = submission.reply("Perform mod commands below:")
         comment_made.mod.distinguish(sticky=True)
-        print("made comment")
+        log.success(f'Made comment: {comment_made.id}')
 
     for comment in mod_comment_stream:
-        print(f'Detected mod comment: {comment.id}')
+        log.info(f'Detected mod comment: {comment.id}')
 
         # mark comment as checked
         db.add_comment(comment.id)
