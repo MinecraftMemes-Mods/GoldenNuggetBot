@@ -42,6 +42,7 @@ class DynamicReply:
     To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
 
     success = lambda commenter, amount_given, op, received_nugs, bonus_nugs: f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
+    
     Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else """{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**."""
 
 
