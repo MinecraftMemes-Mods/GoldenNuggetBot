@@ -18,16 +18,23 @@ Nice try OP, but you cannot award your own posts! Give your voting nuggets to de
 
 stickied_message = """
 Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
+
 # Commands
+
 # !nug
+
 `!nug <amount>` - Awards the chosen amount
+
 `!nug max` - Awards all available nugs
+
 # !bal
+
 `!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
 """
 
 banned = f"""
 You have been banned from the bot.
+
 *If you think that's a mistake, you can [message the moderation team at r/{os.getenv('SUBREDDIT')}](https://reddit.com/message/compose?to=/r/{os.getenv('SUBREDDIT')})*
 """
 
