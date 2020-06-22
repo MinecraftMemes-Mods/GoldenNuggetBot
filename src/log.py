@@ -5,7 +5,7 @@ class Log():
     """Class used to display log messages"""
 
     def info(self, message: str):
-        """Display a warning message"""
+        """Display an informational message"""
         n = datetime.now().isoformat()
         print(
             f'{n} -{self.colors["blue"]} [INFO]{self.colors["reset"]} - {message}')
@@ -22,6 +22,12 @@ class Log():
         print(
             f'{n} -{self.colors["red"]} [ERROR]{self.colors["reset"]} - {message}')
 
+    def success(self, message: str):
+        """Display a success message"""
+        n = datetime.now().isoformat()
+        print(
+            f'{n} -{self.colors["green"]} [SUCCESS]{self.colors["reset"]} - {message}')
+
     def __init__(self):
         """Define color codes"""
         self.colors = {
@@ -31,7 +37,3 @@ class Log():
             'red': '\033[31m',
             'blue': '\033[34m',
         }
-
-
-a = Log()
-a.info('yeet')
