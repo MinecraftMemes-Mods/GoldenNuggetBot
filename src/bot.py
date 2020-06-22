@@ -22,15 +22,27 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 # Commands
 
-# !nug
+## !nug
 
 `!nug <amount>` - Awards the chosen amount
 
 `!nug max` - Awards all available nugs
 
-# !bal
+## !bal
 
 `!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
+
+## !leaderboard
+
+`!leaderboard` - Shows the top ten user's received nugs
+
+## !info
+
+`!info` - Explains the bot's purpose, r/MinecraftMemes' 1.16 event and gives an in-depth guide to the nug system
+
+---
+
+[^(What's this?)](https://www.reddit.com/r/minecraftmemes) ^| [^(Source Code)](https://github.com/Xeoth/GoldenNuggetBot) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
 """
 
 banned = f"""
