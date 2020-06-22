@@ -54,7 +54,7 @@ You have been banned from the bot.
 info_message = f"""
 Confused, or just want to find about more? 
 
-Find a post focusing on the bot, [here](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) and a video meme showcasing our 1.16 celebrations as a whole [here](https://www.reddit.com//r/MinecraftMemes/LINK_TO_PIES_POST).
+Find a post focusing on the bot, [here](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) and a video meme showcasing our 1.16 celebrations as a whole [here](https://www.reddit.com//r/MinecraftMemes/about/sticky).
 """
 
 # dynamic responses
