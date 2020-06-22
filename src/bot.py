@@ -253,7 +253,7 @@ while True:
 
             # update nugflair
             # checks flair isn't being overwritten, unless it's already a nug one
-            if not comment.user_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
+            if not comment.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
                     commenter, f"Available: {commenter_award_nugs} | Received: {commenter_award_nugs} :golden_nug:")  # sets flair
             if not comment.submission.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.submission.author_flair_text):
