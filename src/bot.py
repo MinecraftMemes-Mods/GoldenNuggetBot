@@ -61,6 +61,7 @@ def int_conv(string: str) -> bool:
     except ValueError:
         return False
 
+    
 reddit = praw.Reddit(
     username=os.getenv('BOT_USERNAME'),
     password=os.getenv('PASSWORD'),
