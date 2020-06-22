@@ -283,6 +283,17 @@ while True:
 
             continue
 
+        elif comment.body.startswith('!leaderboard'):
+            log.info(f'{comment.author.name} requested a leaderboard.')
+            leaderboard = db.get_leaderboard()
+            lead_str = ''
+            for position, user in enumerate(leaderboard, start=1):
+                lead_str += f'{position}. {user[0]} at {user[1]} nuggets\n'
+
+            comment.reply(lead_str)
+
+            continue
+
     for submission in mod_submission_stream:
         if not submission or db.check_post(submission.id):
             break
@@ -294,6 +305,9 @@ while True:
         log.success(f'Made comment: {comment_made.id}')
 
     for comment in mod_comment_stream:
+        if not comment or db.check_comment(comment.id):
+            break
+
         log.info(f'Detected mod comment: {comment.id}')
 
         # mark comment as checked
