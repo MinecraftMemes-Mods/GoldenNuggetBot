@@ -293,6 +293,9 @@ while True:
         print("made comment")
 
     for comment in mod_comment_stream:
+        if not comment or db.check_comment(comment.id):
+            break
+            
         print(f'Detected mod comment: {comment.id}')
 
         # mark comment as checked
