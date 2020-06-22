@@ -45,12 +45,12 @@ You have been banned from the bot.
 class DynamicReply:
     @staticmethod
     def not_enough_nugs(commenter, award_nugs): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-    
+
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
 
     @staticmethod
     def account_too_new(commenter): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-    
+
     To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
 
     @staticmethod
@@ -296,7 +296,6 @@ while True:
 
             continue
 
-        # TODO: Add log messages, but after I create a logger class
         elif comment.body.startswith('!unban'):
             if comment.author.name not in moderators:
                 continue
@@ -320,12 +319,19 @@ while True:
                 user = comment.body.split()[1]
                 amount = comment.body.split()[2]
             except IndexError:
+                log.error(
+                    f'Not enough arguments provided by {comment.author.name}')
                 continue
 
             if not int_conv(amount):
+                log.error(
+                    f'Incorrect arguments provided by {comment.author.name}')
                 continue
             else:
                 amount = int(amount)
+
+            log.warn(
+                f'{comment.author.name} requested to set {user}\'s received nug amount to {amount}')
 
             db.set_received(comment.author.name, amount)
 
@@ -337,12 +343,19 @@ while True:
                 user = comment.body.split()[1]
                 amount = comment.body.split()[2]
             except IndexError:
+                log.error(
+                    f'Not enough arguments provided by {comment.author.name}')
                 continue
 
             if not int_conv(amount):
+                log.error(
+                    f'Incorrect arguments provided by {comment.author.name}')
                 continue
             else:
                 amount = int(amount)
+
+            log.warn(
+                f'{comment.author.name} requested to set {user}\'s received nug amount to {amount}')
 
             db.set_available(comment.author.name, amount)
 
@@ -353,7 +366,11 @@ while True:
             try:
                 user = comment.body.split()[1]
             except IndexError:
+                log.error(
+                    f'Incorrect arguments provided by {comment.author.name}')
                 continue
+
+            log.warn(f'{comment.author.name} requested a reset for {user}')
 
             db.set_available(user, os.getenv('DEFAULT_AVAILABLE_NUGGETS'))
             db.set_received(user, 0)
