@@ -34,7 +34,7 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 ## !leaderboard
 
-`!leaderboard` -
+`!leaderboard` - Shows the top ten user's received nugs
 
 ## !info
 
