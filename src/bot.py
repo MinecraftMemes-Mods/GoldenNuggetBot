@@ -3,6 +3,7 @@ import os
 import sqlite3
 import re
 import time
+from log import Log
 from dotenv import load_dotenv
 from database import Database
 load_dotenv()
@@ -39,18 +40,23 @@ You have been banned from the bot.
 """
 
 # dynamic responses
+
+
 class DynamicReply:
-    not_enough_nugs = lambda commenter, award_nugs: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+    @staticmethod
+    def not_enough_nugs(commenter, award_nugs): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
     
     You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
-    
-    account_too_new = lambda commenter: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+
+    @staticmethod
+    def account_too_new(commenter): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
     
     To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
-    
-    success = lambda commenter, amount_given, op, received_nugs, bonus_nugs: f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
 
-    Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else """{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**."""
+    @staticmethod
+    def success(commenter, amount_given, op, received_nugs, bonus_nugs): return f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
+
+    Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else f'{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.'
 
 
 def int_conv(string: str) -> bool:
@@ -135,7 +141,8 @@ while True:
             # author too young and doesn't meet karma requirements
             # (moved from other exception handling to make it so db entry isn't created if author is invalid)
             if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
-                comment_made = comment.reply(DynamicReply.account_too_new(commenter))
+                comment_made = comment.reply(
+                    DynamicReply.account_too_new(commenter))
                 comment_made.mod.distinguish()
                 print("commenter doesn't meet account reqs, continuing")
                 continue
@@ -253,7 +260,7 @@ while True:
 
             # log comment
             comment_made = comment.reply(DynamicReply.success(
-                commenter, amount_given, commenter_award_nugs, op, op_received_nugs, bonus_nugs))
+                commenter, amount_given, op, op_received_nugs, bonus_nugs))
             comment_made.mod.distinguish()
             print("successful transaction")
 
