@@ -163,7 +163,7 @@ while True:
 
             # author too young and doesn't meet karma requirements
             # (moved from other exception handling to make it so db entry isn't created if author is invalid)
-            if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 9 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
+            if int((time.time() - comment.author.created_utc) / (60 * 60 * 24)) < 10 and (comment.author.link_karma + comment.author.comment_karma) < 100:  # 9 days for the first part
                 comment_made = comment.reply(
                     DynamicReply.account_too_new(commenter))
                 comment_made.mod.distinguish()
