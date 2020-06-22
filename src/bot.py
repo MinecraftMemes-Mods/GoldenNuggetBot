@@ -42,7 +42,7 @@ Reply to this comment (replies elsewhere will **not** be executed) to award nugg
 
 ---
 
-[^(What's this?)](https://www.reddit.com/r/minecraftmemes) ^| [^(Source Code)](https://github.com/Xeoth/GoldenNuggetBot) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
+[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/minecraftmemes/"LINK_TO_PIE'S POST") ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
 """
 
 banned = f"""
@@ -51,9 +51,13 @@ You have been banned from the bot.
 *If you think that's a mistake, you can [message the moderation team at r/{os.getenv('SUBREDDIT')}](https://reddit.com/message/compose?to=/r/{os.getenv('SUBREDDIT')})*
 """
 
+info_message = f"""
+Confused, or just want to find about more? 
+
+Find a post focusing on the bot, [here](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) and a video meme showcasing our 1.16 celebrations as a whole [here](https://www.reddit.com//r/MinecraftMemes/LINK_TO_PIES_POST).
+"""
+
 # dynamic responses
-
-
 class DynamicReply:
     @staticmethod
     def not_enough_nugs(commenter, award_nugs): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
