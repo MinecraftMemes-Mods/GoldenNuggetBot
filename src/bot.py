@@ -90,6 +90,10 @@ submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
 comment_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.comments(
     skip_existing=True, pause_after=0)
+mod_submission_stream = reddit.subreddit("MinecraftMeme").stream.submissions(
+    skip_existing=True, pause_after=0)
+mod_comment_stream = reddit.subreddit("MinecraftMeme").stream.comments(
+    skip_existing=True, pause_after=0)
 
 log.success("awaiting comments/posts")
 
