@@ -18,38 +18,30 @@ Nice try OP, but you cannot award your own posts! Give your voting nuggets to de
 
 stickied_message = """
 Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
-
 # Commands
-
 # !nug
-
 `!nug <amount>` - Awards the chosen amount
-
 `!nug max` - Awards all available nugs
-
 # !bal
-
 `!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
 """
 
 banned = f"""
 You have been banned from the bot.
-
 *If you think that's a mistake, you can [message the moderation team at r/{os.getenv('SUBREDDIT')}](https://reddit.com/message/compose?to=/r/{os.getenv('SUBREDDIT')})*
 """
 
 # dynamic responses
 class DynamicReply:
     not_enough_nugs = lambda commenter, award_nugs: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-    
-    You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
-    
-    account_too_new = lambda commenter: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
-    
-    To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
-    
-    success = lambda commenter, amount_given, op, received_nugs, bonus_nugs: f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
 
+    You don't have enough voting nugs to do that. You have **{award_nugs}** available to reward."""
+
+    account_too_new = lambda commenter: f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
+
+    To prevent cheating users with low karma and/or new accounts are unable to award nuggets. However, **you can still receive them!**"""
+
+    success = lambda commenter, amount_given, op, received_nugs, bonus_nugs: f"""{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**.
     Because of your award, {op} has received **{bonus_nugs}** additional nugget(s) that they can award to others.""" if bonus_nugs else """{commenter}, you gave **{amount_given}** nugget(s) to {op}, bringing their total nuggets received to **{received_nugs}**."""
 
 
@@ -60,7 +52,6 @@ def int_conv(string: str) -> bool:
         return True
     except ValueError:
         return False
-
 
 reddit = praw.Reddit(
     username=os.getenv('BOT_USERNAME'),
@@ -81,6 +72,10 @@ moderators = os.getenv('MODERATORS').split(',')
 submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
 comment_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.comments(
+    skip_existing=True, pause_after=0)
+mod_submission_stream = reddit.subreddit("MinecraftMeme").stream.submissions(
+    skip_existing=True, pause_after=0)
+mod_comment_stream = reddit.subreddit("MinecraftMeme").stream.comments(
     skip_existing=True, pause_after=0)
 print("awaiting comments/posts")
 
@@ -114,7 +109,7 @@ while True:
         db.add_comment(comment.id)
 
         # checking the validity of the comment
-        if comment.is_root or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name:
+        if comment.is_root or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name == os.getenv("BOT_USERNAME"):
             continue
 
         # *** Commands ***
@@ -194,7 +189,7 @@ while True:
             # creates database entry for op if required
             if db.get(op) == None:
                 print("creating db for op")
-                db.set_available(op, 5)
+                db.set_available(op, os.getenv("DEFAULT_AVAILABLE_NUGS"))
                 db.set_received(op, 0)
 
             # setting some more helpful variables
@@ -209,18 +204,14 @@ while True:
 
             """
             This section gives the OP an award nug for hitting a multiple of 5 received nuggets
-
             Now, this might look weird, you might think "why isn't this just if op_received_nugs % 5 == 0, op_award_nugs += 1"
             Well, I (coder) thought about it some, and it turns out that doesn't really work. Let me elaborate
-
             Since you can award multiple nuggets to the same poster, and since in theory someone could obtain more than 5 award
             nuggets (either via award nug resets or receivals), someone could in theory award an amount that causes OP to go past
             a multiple of 5 but not stay on it, and potentially multiple times.
-
             For example, OP has received 4, someone awards them 2. They would have received 6 total, they should gain 1 award nug,
             but the former check wouldn't work. Or more extreme, OP has received 4, someone awards them 8. They would have received
             12 total, they should gain 2 award nugs (for 5 and 10 received nuggets), but again the check wouldn't work
-
             This little bit of code accounts for that, by finding the difference needed for the next level, and then seeing how much
             it goes over and adds accordingly. It should work
             """
@@ -263,7 +254,7 @@ while True:
         elif comment.body.startswith('!bal'):
             if db.get(comment.author.name)["available"] == None and db.get(comment.author.name)["received"] == None:
                 print("creating db for commenter")
-                db.set_available(commenter, 5)
+                db.set_available(commenter, os.getenv("DEFAULT_AVAILABLE_NUGS"))
                 db.set_received(commenter, 0)
 
             comment.reply(f"""**Here is your balance**:
@@ -272,7 +263,28 @@ while True:
 
             continue
 
-        elif comment.body.startswith('!ban'):
+    for submission in mod_submission_stream:
+        if not submission or db.check_post(submission.id):
+            break
+
+        print(f'Detected second sub post: {submission.id}')
+        db.add_post(submission.id)
+        comment_made = submission.reply("Perform mod commands below:")
+        comment_made.mod.distinguish(sticky=True)
+        print("made comment")
+
+    for comment in mod_comment_stream:
+        print(f'Detected mod comment: {comment.id}')
+
+        # mark comment as checked
+        db.add_comment(comment.id)
+
+        # checking the validity of the comment
+        if comment.is_root or comment.author.name == os.getenv('BOT_USERNAME') or not comment.parent().author.name == os.getenv("BOT_USERNAME"):
+            continue
+
+        # bans chosen user from bot
+        if comment.body.startswith('!ban'):
             if comment.author.name not in moderators:
                 continue
 
@@ -285,9 +297,8 @@ while True:
 
             db.ban(banned, comment.author.name)
 
-            continue
-
         # TODO: Add log messages, but after I create a logger class
+        # unban's chosen user from bot
         elif comment.body.startswith('!unban'):
             if comment.author.name not in moderators:
                 continue
@@ -301,8 +312,7 @@ while True:
 
             db.unban(unbanned)
 
-            continue
-
+        # sets chosen user's received nugs
         elif comment.body.startswith('!setreceived'):
             if comment.author.name not in moderators:
                 continue
@@ -320,6 +330,7 @@ while True:
 
             db.set_received(comment.author.name, amount)
 
+        # sets chosen user's available nugs
         elif comment.body.startswith('!setavailable'):
             if comment.author.name not in moderators:
                 continue
@@ -337,6 +348,7 @@ while True:
 
             db.set_available(comment.author.name, amount)
 
+        # resets chosen user's nugs
         elif comment.body.startswith('!reset'):
             if comment.author.name not in moderators:
                 continue
@@ -349,5 +361,4 @@ while True:
             db.set_available(user, os.getenv('DEFAULT_AVAILABLE_NUGGETS'))
             db.set_received(user, 0)
 
-    # other things?
     time.sleep(1)
