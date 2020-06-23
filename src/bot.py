@@ -99,7 +99,7 @@ while True:
     # notify that the bot is still running
     if time.time() > next_refresh_time:
         log.info('Keepalive: Bot is still running')
-        next_refresh_time += 5 * 60  # 50 minutes after
+        next_refresh_time += 5 * 60  # 5 minutes after
 
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
@@ -250,7 +250,6 @@ while True:
 
             # updating db
             db.set_available(commenter, commenter_award_nugs)
-            print(op_received_nugs, op_award_nugs)
             db.set_received(op, op_received_nugs)
             db.set_available(op, op_award_nugs)
 
