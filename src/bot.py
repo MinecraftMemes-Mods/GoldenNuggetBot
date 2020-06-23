@@ -96,10 +96,10 @@ mod_comment_stream = reddit.subreddit(os.getenv('MODSUB')).stream.comments(
 log.success("awaiting comments/posts")
 
 while True:
-    # check if needed to refresh token
+    # notify that the bot is still running
     if time.time() > next_refresh_time:
-        log.info("50 min cycle completed")
-        next_refresh_time += 1 * 60  # 50 minutes after
+        log.info('Keepalive: Bot is still running')
+        next_refresh_time += 5 * 60  # 50 minutes after
 
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
