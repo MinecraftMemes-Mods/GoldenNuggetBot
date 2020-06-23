@@ -18,31 +18,11 @@ Nice try OP, but you cannot award your own posts! Give your voting nuggets to de
 """
 
 stickied_message = """
-Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
-
-# Commands
-
-## !nug
-
-`!nug <amount>` - Awards the chosen amount
-
-`!nug max` - Awards all available nugs
-
-## !bal
-
-`!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
-
-## !leaderboard
-
-`!leaderboard` - Shows the top ten user's received nugs
-
-## !info
-
-`!info` - Explains the bot's purpose, r/MinecraftMemes' 1.16 event and gives an in-depth guide to the nug system
+Reply to this comment with `!nug` to give OP 1 golden nugget. Reply with `!nug <amount>` to give OP multiple nuggets.
 
 ---
 
-[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/minecraftmemes/"LINK_TO_PIE'S POST") ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
+[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/minecraftmemes/about/sticky) ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^| [^(Full Commands)](https://www.reddit.com/user/GoldenNugBot/comments/he45wp/help_for_goldennugbot/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
 """
 
 banned = f"""
@@ -58,6 +38,8 @@ Find a post focusing on the bot, [here](https://www.reddit.com/user/GoldenNugBot
 """
 
 # dynamic responses
+
+
 class DynamicReply:
     @staticmethod
     def not_enough_nugs(commenter, award_nugs): return f"""Hi There {commenter}! Unfortunately, I am unable to fullfill your request.
@@ -106,18 +88,18 @@ submission_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.submissions(
     skip_existing=True, pause_after=0)
 comment_stream = reddit.subreddit(os.getenv('SUBREDDIT')).stream.comments(
     skip_existing=True, pause_after=0)
-mod_submission_stream = reddit.subreddit("MinecraftMeme").stream.submissions(
+mod_submission_stream = reddit.subreddit(os.getenv('MODSUB')).stream.submissions(
     skip_existing=True, pause_after=0)
-mod_comment_stream = reddit.subreddit("MinecraftMeme").stream.comments(
+mod_comment_stream = reddit.subreddit(os.getenv('MODSUB')).stream.comments(
     skip_existing=True, pause_after=0)
 
 log.success("awaiting comments/posts")
 
 while True:
-    # check if needed to refresh token
+    # notify that the bot is still running
     if time.time() > next_refresh_time:
-        log.info("50 min cycle completed")
-        next_refresh_time += 1 * 60  # 50 minutes after
+        log.info('Keepalive: Bot is still running')
+        next_refresh_time += 5 * 60  # 5 minutes after
 
     for submission in submission_stream:
         if not submission or db.check_post(submission.id):
@@ -173,7 +155,7 @@ while True:
             # creates database entry for commenter if required
             if db.get(commenter) == None:
                 log.info("creating commenter db")
-                db.set_available(commenter, 10000)
+                db.set_available(commenter, os.getenv('DEF_AV_NUGS'))
                 db.set_received(commenter, 0)
 
             # setting some more helpful variables
@@ -233,6 +215,9 @@ while True:
             if op_received_nugs == None:
                 op_received_nugs = 0
 
+            if op_award_nugs == None:
+                op_award_nugs = os.getenv('DEF_AV_NUGS')
+
             # reducing commenter's award nugs by the number they give
             # should moderators have infinite award nugs?
             commenter_award_nugs -= amount_given
@@ -270,12 +255,12 @@ while True:
 
             # update nugflair
             # checks flair isn't being overwritten, unless it's already a nug one
-            if not comment.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.author_flair_text):
+            if not comment.author_flair_text or re.match(r"Received: \d+ :golden_nug:", comment.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
-                    commenter, f"Received: {commenter_award_nugs} | :golden_nug:")  # sets flair
-            if not comment.submission.author_flair_text or re.match(r"Available: \d \| Received: \d+ :golden_nug:", comment.submission.author_flair_text):
+                    commenter, f"Received: {db.get(commenter)['received']} :golden_nug:")  # sets flair
+            if not comment.submission.author_flair_text or re.match(r"Received: \d+ :golden_nug:", comment.submission.author_flair_text):
                 reddit.subreddit(os.getenv('SUBREDDIT')).flair.set(
-                    op, f"Received: {op_award_nugs} | :golden_nug:")
+                    op, f"Received: {db.get(op)['received']} :golden_nug:")
 
             # log comment
             comment_made = comment.reply(DynamicReply.success(
@@ -310,11 +295,11 @@ while True:
             comment_made.mod.distinguish()
 
             continue
-        
+
         elif comment.body.startswith("!info") or comment.body.startswith("!bal"):
             comment_made = comment.reply(info_message)
             comment_made.mod.distinguish()
-            
+
             continue
 
     for submission in mod_submission_stream:
