@@ -18,31 +18,11 @@ Nice try OP, but you cannot award your own posts! Give your voting nuggets to de
 """
 
 stickied_message = """
-Reply to this comment (replies elsewhere will **not** be executed) to award nugget(s) to OP, or run other nug bot commands.
-
-# Commands
-
-## !nug
-
-`!nug <amount>` - Awards the chosen amount
-
-`!nug max` - Awards all available nugs
-
-## !bal
-
-`!bal` - Shows your balance, and creates a fresh 'wallet' if you haven't given or received nugs yet
-
-## !leaderboard
-
-`!leaderboard` - Shows the top ten user's received nugs
-
-## !info
-
-`!info` - Explains the bot's purpose, r/MinecraftMemes' 1.16 event and gives an in-depth guide to the nug system
+Reply to this comment with `!nug` to give OP 1 golden nugget. Reply with `!nug <amount>` to give OP multiple nuggets.
 
 ---
 
-[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/minecraftmemes/"LINK_TO_PIE'S POST") ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
+[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/minecraftmemes/about/sticky) ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^| [^(Full Commands)](https://www.reddit.com/user/GoldenNugBot/comments/he45wp/help_for_goldennugbot/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
 """
 
 banned = f"""
