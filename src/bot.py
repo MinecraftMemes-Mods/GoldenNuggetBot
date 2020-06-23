@@ -235,6 +235,9 @@ while True:
             if op_received_nugs == None:
                 op_received_nugs = 0
 
+            if op_award_nugs == None:
+                op_award_nugs = os.getenv('DEF_AV_NUGS')
+
             # reducing commenter's award nugs by the number they give
             # should moderators have infinite award nugs?
             commenter_award_nugs -= amount_given
@@ -267,6 +270,7 @@ while True:
 
             # updating db
             db.set_available(commenter, commenter_award_nugs)
+            print(op_received_nugs, op_award_nugs)
             db.set_received(op, op_received_nugs)
             db.set_available(op, op_award_nugs)
 
