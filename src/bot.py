@@ -22,7 +22,7 @@ Reply to this comment with `!nug` to give OP 1 golden nugget. Reply with `!nug <
 
 ---
 
-[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/minecraftmemes/about/sticky) ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^| [^(Full Commands)](https://www.reddit.com/user/GoldenNugBot/comments/he45wp/help_for_goldennugbot/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
+[^(r/MinecraftMemes Nether Event)](https://www.reddit.com/r/MinecraftMemes/comments/heeekt/the_nether_update_with_rminecraftmemes_more_info) ^| [^(About this bot)](https://www.reddit.com/user/GoldenNugBot/comments/hdzqwi/confused_read_this/) ^| [^(Full Commands)](https://www.reddit.com/user/GoldenNugBot/comments/he45wp/help_for_goldennugbot/) ^(| Made by Xeoth, coderDude69 and LPDtheGamer)
 """
 
 banned = f"""
